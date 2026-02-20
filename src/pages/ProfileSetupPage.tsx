@@ -75,6 +75,8 @@ const fallbackWhyOptions = [
 const fallbackCareerOptions = [
   "Software & Tech", "Healthcare & Medicine", "Business & Finance", "Engineering",
   "Education & Teaching", "Creative & Design", "Law & Policy", "Science & Research",
+  "Trades & Skilled Labor", "Media & Communications", "Psychology & Counseling",
+  "Government & Public Service", "Environmental Science", "Data & Analytics",
 ];
 
 function getStageOptionsForLevel(level: string): StageOption[] {
