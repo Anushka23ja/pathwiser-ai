@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, Download, RotateCcw,
   CheckCircle2, Circle, Calendar, BookOpen, TrendingUp,
-  AlertTriangle, Zap, Sparkles, Loader2,
+  AlertTriangle, Zap, Sparkles, Loader2, ChevronRight as ChevronRightIcon,
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +105,28 @@ function getDeadlineBadge(action: { urgent?: boolean }, completedIds: Set<string
 
 // Current month name
 const currentMonthName = new Date().toLocaleString("en", { month: "long" });
+
+// ─── Mobile Truncated Text ───────────────────────────────
+function MobileTruncatedText({ text, className = "" }: { text: string; className?: string }) {
+  const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState(false);
+
+  if (!isMobile || text.length < 100) {
+    return <p className={className}>{text}</p>;
+  }
+
+  return (
+    <p className={className}>
+      {expanded ? text : `${text.slice(0, 90)}…`}
+      <button
+        onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+        className="text-primary font-medium ml-1 hover:underline"
+      >
+        {expanded ? "Show less" : "Read more"}
+      </button>
+    </p>
+  );
+}
 
 // ─── Month Block ─────────────────────────────────────────
 function MonthBlock({ month, actions, onToggle, completedIds }: {
@@ -205,7 +228,7 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">{yearPlan.description}</p>
+          <MobileTruncatedText text={yearPlan.description} className="text-xs text-muted-foreground mt-1" />
           <div className="flex items-center gap-3 mt-3">
             <Progress value={progress} className="flex-1 h-2" />
             <span className="text-xs font-bold text-primary">{progress}%</span>
@@ -391,10 +414,10 @@ export default function RoadmapPage() {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
             <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-4">
-                <p className="text-sm text-foreground flex items-start gap-2">
+                <div className="flex items-start gap-2">
                   <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  {aiSummary}
-                </p>
+                  <MobileTruncatedText text={aiSummary} className="text-sm text-foreground" />
+                </div>
               </CardContent>
             </Card>
           </motion.div>
