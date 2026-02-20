@@ -65,6 +65,7 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
+                      data-tutorial={item.url.replace("/", "")}
                       className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
                       activeClassName="bg-sidebar-accent text-foreground font-semibold"
                     >
@@ -87,6 +88,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
+                      data-tutorial={item.url.replace("/", "").split("#")[0]}
                       className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
                       activeClassName="bg-sidebar-accent text-foreground font-semibold"
                     >
