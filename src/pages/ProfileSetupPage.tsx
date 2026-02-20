@@ -194,8 +194,8 @@ export default function ProfileSetupPage() {
         longTermGoals: profile.whyUsing,
       }));
 
-      toast({ title: "You're all set!", description: "Generating your personalized roadmap..." });
-      navigate("/roadmap");
+      toast({ title: "You're all set!", description: "Generating your personalized dashboard..." });
+      navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
