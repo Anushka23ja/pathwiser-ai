@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Building2, Briefcase, Target, Lightbulb, Sparkles, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Building2, Briefcase, Target, Lightbulb, Sparkles, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,40 +37,40 @@ const levelCards = [
   },
 ];
 
-const levelDetailOptions: Record<string, { label: string; description: string }[]> = {
+// Hardcoded fallbacks in case AI fails
+const fallbackDetailOptions: Record<string, { label: string; description: string }[]> = {
   "High School": [
-    { label: "Running Start / Dual Enrollment", description: "I want to earn college credits while still in high school" },
-    { label: "First-Generation College Student", description: "I'd be the first in my family to attend college" },
-    { label: "AP / IB Courses", description: "I'm taking or plan to take Advanced Placement or IB classes" },
     { label: "College Prep & Applications", description: "I need help with college applications, essays, and scholarships" },
     { label: "Trade / Vocational Path", description: "I'm interested in trade school, apprenticeships, or certifications" },
-    { label: "Undecided on College", description: "I'm not sure if college is the right move for me" },
     { label: "Financial Aid & Scholarships", description: "I need guidance on how to pay for higher education" },
     { label: "Early Career Exploration", description: "I want to explore careers through internships or job shadowing" },
   ],
   "College": [
-    { label: "Thinking of Switching Majors", description: "My current major might not be the right fit for me" },
-    { label: "Transfer Student", description: "I'm transferring or considering transferring to another school" },
+    { label: "Thinking of Switching Majors", description: "My current major might not be the right fit" },
     { label: "Graduate School Prep", description: "I want to prepare for a master's, PhD, or professional degree" },
-    { label: "First-Generation College Student", description: "I'm the first in my family to attend college" },
     { label: "Internship & Co-op Search", description: "I want to land internships or co-ops in my field" },
-    { label: "Research Opportunities", description: "I want to get involved in academic or industry research" },
-    { label: "Career Fair & Networking", description: "I need help preparing for career fairs and building connections" },
-    { label: "Debt & Financial Planning", description: "I want to manage student loans and plan financially" },
+    { label: "Career Fair & Networking", description: "I need help preparing for career fairs" },
   ],
   "Professional": [
     { label: "Career Switch", description: "I want to transition into a completely different field" },
-    { label: "Going Back to School", description: "I'm considering a degree or certificate program" },
     { label: "Certifications & Upskilling", description: "I want to earn certifications to advance or pivot" },
     { label: "Leadership & Management", description: "I want to move into a leadership or management role" },
     { label: "Freelance / Side Business", description: "I'm exploring freelancing or starting a side business" },
-    { label: "Salary Negotiation & Growth", description: "I want to increase my earning potential" },
-    { label: "Bootcamp or Accelerated Program", description: "I'm looking at intensive short-term programs" },
-    { label: "Work-Life Balance Optimization", description: "I want a career that better fits my lifestyle goals" },
   ],
 };
 
-// Stage options grouped by education level
+const fallbackWhyOptions = [
+  "I don't know what career to pick",
+  "I want to switch my major or career",
+  "I need help planning my next steps",
+  "I want to find higher-paying opportunities",
+];
+
+const fallbackCareerOptions = [
+  "Software & Tech", "Healthcare & Medicine", "Business & Finance", "Engineering",
+  "Education & Teaching", "Creative & Design", "Law & Policy", "Science & Research",
+];
+
 function getStageOptionsForLevel(level: string): StageOption[] {
   switch (level) {
     case "High School":
@@ -83,182 +83,6 @@ function getStageOptionsForLevel(level: string): StageOption[] {
       return [];
   }
 }
-
-function getWhyOptions(stage: string): string[] {
-  // High school stages
-  if (["9th", "10th"].includes(stage)) return [
-    "I don't know what career to pick",
-    "I want to explore different college options",
-    "I need help building my extracurricular profile",
-    "I want to prepare for standardized tests",
-    "I want to understand what majors fit me",
-    "I'm exploring trade school vs. college",
-    "I want to start preparing early for scholarships",
-  ];
-  if (["11th", "12th"].includes(stage)) return [
-    "I need help with college applications and essays",
-    "I want to compare colleges and programs",
-    "I need to prepare for SAT/ACT",
-    "I'm looking for scholarships and financial aid",
-    "I want to explore gap year options",
-    "I don't know what major to choose",
-    "I want to build a strong application profile",
-    "I'm considering Running Start or dual enrollment",
-  ];
-  // Running Start
-  if (["rs-1", "rs-2"].includes(stage)) return [
-    "I want to maximize my transfer credits",
-    "I need help choosing a 4-year university",
-    "I want to balance HS requirements and college courses",
-    "I'm planning my associate degree completion",
-    "I want to explore career options while earning credits",
-    "I need help with transfer applications",
-    "I want to find scholarships for transfer students",
-  ];
-  // College stages
-  if (stage === "col-fresh") return [
-    "I'm undecided on my major",
-    "I want to explore different career paths",
-    "I want to get involved on campus",
-    "I need help adjusting to college academics",
-    "I want to find research or internship opportunities",
-    "I'm considering switching schools",
-    "I need help managing finances and budgeting",
-  ];
-  if (stage === "col-soph") return [
-    "I need to declare my major",
-    "I want to land my first internship",
-    "I'm thinking about switching majors",
-    "I want to build a professional network",
-    "I'm considering study abroad",
-    "I need help with career fair preparation",
-    "I want to start building my portfolio",
-  ];
-  if (stage === "col-junior") return [
-    "I want to secure a competitive internship",
-    "I'm deciding between grad school and working",
-    "I need to prepare for the GRE/GMAT/LSAT",
-    "I want to build leadership experience",
-    "I need help with graduate school applications",
-    "I want to network with industry professionals",
-    "I'm planning my senior year strategically",
-  ];
-  if (stage === "col-senior") return [
-    "I'm applying to full-time jobs",
-    "I'm applying to graduate programs",
-    "I need help with interview preparation",
-    "I want to negotiate my first salary",
-    "I'm finishing my thesis or capstone",
-    "I need to compare job offers",
-    "I'm planning my post-graduation transition",
-  ];
-  // Master's applicant
-  if (stage === "masters") return [
-    "I want to find the right graduate program",
-    "I need help with my statement of purpose",
-    "I'm preparing for entrance exams (GRE/GMAT/LSAT)",
-    "I want to secure research or teaching assistantships",
-    "I need to find fellowship and funding opportunities",
-    "I want to strengthen my application profile",
-    "I'm comparing programs by career outcomes",
-    "I want to transition into a new field through grad school",
-  ];
-  // Gap year
-  if (stage === "gap-year") return [
-    "I want to use my gap year productively",
-    "I'm exploring career options before committing",
-    "I want to gain work or volunteer experience",
-    "I need to save money for school",
-    "I'm applying to college during my gap year",
-    "I want to travel and learn new skills",
-    "I need a plan so I don't lose momentum",
-  ];
-  // Early professional
-  if (stage === "early-pro") return [
-    "I want to advance in my current role",
-    "I'm considering a career switch",
-    "I want to earn certifications or upskill",
-    "I'm thinking about going back to school",
-    "I want to move into management or leadership",
-    "I'm exploring freelancing or entrepreneurship",
-    "I want to increase my earning potential",
-    "I need better work-life balance",
-  ];
-  // Default
-  return [
-    "I don't know what career to pick",
-    "I want to switch my major or career",
-    "I'm exploring graduate school options",
-    "I want to advance in my current field",
-    "I need help planning my next steps",
-    "I want to compare different career paths",
-    "I want to find higher-paying opportunities",
-  ];
-}
-
-function getCareerOptions(stage: string): string[] {
-  // Master's / grad-focused
-  if (stage === "masters") return [
-    "Academic Research",
-    "Data Science & AI",
-    "Healthcare & Clinical Research",
-    "Business & Consulting",
-    "Engineering & R&D",
-    "Law & Policy",
-    "Education & Higher Ed Administration",
-    "Biotech & Pharmaceuticals",
-    "Finance & Quantitative Analysis",
-    "Public Health & Epidemiology",
-    "Psychology & Counseling",
-    "Environmental Science & Sustainability",
-  ];
-  // Early professional
-  if (stage === "early-pro") return [
-    "Software & Tech",
-    "Product Management",
-    "Data & Analytics",
-    "Healthcare & Medicine",
-    "Business & Consulting",
-    "Marketing & Growth",
-    "Finance & Investment",
-    "Engineering & Manufacturing",
-    "Design & UX",
-    "Sales & Business Development",
-    "Project & Operations Management",
-    "Entrepreneurship & Startups",
-  ];
-  // College juniors/seniors — career-focused
-  if (["col-junior", "col-senior"].includes(stage)) return [
-    "Software & Tech",
-    "Healthcare & Medicine",
-    "Business & Finance",
-    "Engineering",
-    "Data Science & Analytics",
-    "Creative & Design",
-    "Law & Policy",
-    "Consulting & Strategy",
-    "Science & Research",
-    "Marketing & Communications",
-    "Entrepreneurship",
-    "Nonprofit & Social Impact",
-  ];
-  // Default / HS / early college — broader exploration
-  return [
-    "Software & Tech",
-    "Healthcare & Medicine",
-    "Business & Finance",
-    "Engineering",
-    "Education & Teaching",
-    "Creative & Design",
-    "Law & Policy",
-    "Science & Research",
-    "Trades & Skilled Labor",
-    "Marketing & Communications",
-    "Social Work & Counseling",
-    "Entrepreneurship",
-  ];
-}
-
 
 function ToggleChip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
@@ -325,11 +149,19 @@ function StageCard({ stage, selected, onClick }: { stage: StageOption; selected:
   );
 }
 
+interface AIQuestions {
+  situationOptions: { label: string; description: string }[];
+  whyOptions: string[];
+  careerOptions: string[];
+}
+
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [aiQuestions, setAiQuestions] = useState<AIQuestions | null>(null);
   const [profile, setProfile] = useState({
     educationLevel: "",
     stage: "" as string,
@@ -349,6 +181,40 @@ export default function ProfileSetupPage() {
   const toggleArrayItem = (arr: string[], item: string) =>
     arr.includes(item) ? arr.filter((v) => v !== item) : [...arr, item];
 
+  // Fetch AI-generated questions when moving from step 1 (stage) to step 2
+  const fetchAIQuestions = async () => {
+    setLoadingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("onboarding-ai", {
+        body: {
+          action: "generate_questions",
+          context: {
+            educationLevel: profile.educationLevel,
+            stage: profile.stage,
+            previousAnswers: {
+              schoolName: profile.schoolName,
+              intendedMajor: profile.intendedMajor,
+              yearsExperience: profile.yearsExperience,
+              currentField: profile.currentField,
+              levelDetails: profile.levelDetails,
+            },
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (data?.result) {
+        setAiQuestions(data.result);
+      }
+    } catch (err) {
+      console.error("AI questions error:", err);
+      // Use fallbacks silently
+      setAiQuestions(null);
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
   const canProceed = () => {
     switch (step) {
       case 0: return profile.educationLevel !== "";
@@ -360,10 +226,19 @@ export default function ProfileSetupPage() {
     }
   };
 
+  const handleNext = async () => {
+    if (step === 1 && profile.stage) {
+      // Trigger AI question generation when leaving stage step
+      await fetchAIQuestions();
+    }
+    setStep(step + 1);
+  };
+
   const handleSubmit = async () => {
     if (!user) return;
     setSaving(true);
     try {
+      // Save profile to DB
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -379,7 +254,7 @@ export default function ProfileSetupPage() {
 
       if (error) throw error;
 
-      // Save to localStorage for roadmap and other pages
+      // Save to localStorage
       localStorage.setItem("pathwise-profile", JSON.stringify({
         educationLevel: profile.educationLevel,
         interests: profile.careerInterests,
@@ -393,11 +268,38 @@ export default function ProfileSetupPage() {
         yearsExperience: profile.yearsExperience,
         currentField: profile.currentField,
       }));
-
-      // Save stage for roadmap auto-generation
       localStorage.setItem("pathwise-selected-stage", profile.stage);
 
-      toast({ title: "You're all set!", description: "Generating your personalized roadmap..." });
+      // Now generate AI roadmap
+      toast({ title: "Profile saved!", description: "Our AI is building your personalized roadmap..." });
+
+      try {
+        const { data: roadmapData, error: roadmapError } = await supabase.functions.invoke("onboarding-ai", {
+          body: {
+            action: "generate_roadmap",
+            context: {
+              educationLevel: profile.educationLevel,
+              stage: profile.stage,
+              levelDetails: profile.levelDetails,
+              whyUsing: profile.whyUsing,
+              careerInterests: profile.careerInterests,
+              schoolName: profile.schoolName,
+              intendedMajor: profile.intendedMajor,
+              yearsExperience: profile.yearsExperience,
+              currentField: profile.currentField,
+            },
+          },
+        });
+
+        if (roadmapError) throw roadmapError;
+        if (roadmapData?.result) {
+          localStorage.setItem("pathwise-ai-roadmap", JSON.stringify(roadmapData.result));
+        }
+      } catch (aiErr) {
+        console.error("AI roadmap generation failed:", aiErr);
+        // Will fall back to static roadmap on roadmap page
+      }
+
       navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -407,8 +309,12 @@ export default function ProfileSetupPage() {
   };
 
   const progress = ((step + 1) / steps.length) * 100;
-  const detailOptions = levelDetailOptions[profile.educationLevel] || [];
   const availableStages = getStageOptionsForLevel(profile.educationLevel);
+
+  // Use AI questions or fallbacks
+  const detailOptions = aiQuestions?.situationOptions || fallbackDetailOptions[profile.educationLevel] || [];
+  const whyOptions = aiQuestions?.whyOptions || fallbackWhyOptions;
+  const careerOptions = aiQuestions?.careerOptions || fallbackCareerOptions;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -453,7 +359,7 @@ export default function ProfileSetupPage() {
                       <button
                         key={card.value}
                         type="button"
-                        onClick={() => setProfile({ ...profile, educationLevel: card.value, levelDetails: [], stage: "" })}
+                        onClick={() => setProfile({ ...profile, educationLevel: card.value, levelDetails: [], stage: "", whyUsing: [], careerInterests: [] })}
                         className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 ${
                           profile.educationLevel === card.value
                             ? "border-primary bg-primary/5 shadow-elevated"
@@ -461,22 +367,16 @@ export default function ProfileSetupPage() {
                         }`}
                       >
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                          profile.educationLevel === card.value
-                            ? "gradient-cta"
-                            : "bg-muted"
+                          profile.educationLevel === card.value ? "gradient-cta" : "bg-muted"
                         }`}>
                           <card.icon className={`w-6 h-6 ${
-                            profile.educationLevel === card.value
-                              ? "text-primary-foreground"
-                              : "text-muted-foreground"
+                            profile.educationLevel === card.value ? "text-primary-foreground" : "text-muted-foreground"
                           }`} />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-display font-semibold text-foreground">{card.title}</h3>
-                            {profile.educationLevel === card.value && (
-                              <CheckCircle2 className="w-5 h-5 text-primary" />
-                            )}
+                            {profile.educationLevel === card.value && <CheckCircle2 className="w-5 h-5 text-primary" />}
                           </div>
                           <p className="text-muted-foreground text-sm mt-1">{card.description}</p>
                         </div>
@@ -485,23 +385,15 @@ export default function ProfileSetupPage() {
                   </div>
 
                   {profile.educationLevel && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="mt-6"
-                    >
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-6">
                       <label className="block text-sm font-medium text-foreground mb-2">
-                        {profile.educationLevel === "Professional"
-                          ? "Company or last school (optional)"
-                          : "School or college name (optional)"}
+                        {profile.educationLevel === "Professional" ? "Company or last school (optional)" : "School or college name (optional)"}
                       </label>
                       <input
                         type="text"
                         placeholder={
-                          profile.educationLevel === "High School"
-                            ? "e.g. Lincoln High School"
-                            : profile.educationLevel === "College"
-                            ? "e.g. University of Washington"
+                          profile.educationLevel === "High School" ? "e.g. Lincoln High School"
+                            : profile.educationLevel === "College" ? "e.g. University of Washington"
                             : "e.g. Google, Amazon, previous school..."
                         }
                         value={profile.schoolName}
@@ -518,13 +410,9 @@ export default function ProfileSetupPage() {
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <MapPin className="w-7 h-7 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
-                      Where exactly are you right now?
-                    </h2>
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Where exactly are you right now?</h2>
                   </div>
-                  <p className="text-muted-foreground mb-8">
-                    This determines your personalized roadmap — we'll build time-sensitive milestones starting from this point.
-                  </p>
+                  <p className="text-muted-foreground mb-8">This determines your personalized roadmap — we'll build time-sensitive milestones starting from this point.</p>
 
                   <div className="grid gap-3">
                     {availableStages.map((stage) => (
@@ -532,17 +420,14 @@ export default function ProfileSetupPage() {
                         key={stage.id}
                         stage={stage}
                         selected={profile.stage === stage.id}
-                        onClick={() => setProfile({ ...profile, stage: stage.id, whyUsing: [], careerInterests: [] })}
+                        onClick={() => setProfile({ ...profile, stage: stage.id, whyUsing: [], careerInterests: [], levelDetails: [] })}
                       />
                     ))}
                   </div>
 
-                  {/* Conditional follow-up fields */}
                   {profile.stage && profile.educationLevel === "College" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-6">
-                      <label className="block text-sm font-medium text-foreground mb-2">
-                        Intended or declared major (optional)
-                      </label>
+                      <label className="block text-sm font-medium text-foreground mb-2">Intended or declared major (optional)</label>
                       <input
                         type="text"
                         placeholder="e.g. Computer Science, Biology, Undeclared..."
@@ -556,9 +441,7 @@ export default function ProfileSetupPage() {
                   {profile.stage && profile.educationLevel === "Professional" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-6 space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          Years of experience
-                        </label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Years of experience</label>
                         <div className="flex flex-wrap gap-2">
                           {["< 1 year", "1–3 years", "3–5 years", "5–10 years", "10+ years"].map((opt) => (
                             <button
@@ -577,9 +460,7 @@ export default function ProfileSetupPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          Current or target field (optional)
-                        </label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Current or target field (optional)</label>
                         <input
                           type="text"
                           placeholder="e.g. Software Engineering, Marketing, Healthcare..."
@@ -593,22 +474,29 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 3: Level-specific details */}
+              {/* Step 3: AI-generated situation options */}
               {step === 2 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Sparkles className="w-7 h-7 text-primary" />
                     <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
-                      {profile.educationLevel === "High School"
-                        ? "Tell us more about your path"
-                        : profile.educationLevel === "College"
-                        ? "Where are you in your journey?"
+                      {profile.educationLevel === "High School" ? "Tell us more about your path"
+                        : profile.educationLevel === "College" ? "Where are you in your journey?"
                         : "What are you looking for?"}
                     </h2>
                   </div>
-                  <p className="text-muted-foreground mb-8">
-                    Select all that apply — this helps us show you the most relevant options and resources.
-                  </p>
+                  <p className="text-muted-foreground mb-2">Select all that apply — these options were tailored by AI based on your stage.</p>
+                  {loadingAI && (
+                    <div className="flex items-center gap-2 text-primary text-sm mb-4">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>AI is personalizing your options...</span>
+                    </div>
+                  )}
+                  {!loadingAI && aiQuestions && (
+                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Personalized by AI for your profile
+                    </p>
+                  )}
                   <div className="grid sm:grid-cols-2 gap-3">
                     {detailOptions.map((opt) => (
                       <DetailCard
@@ -623,16 +511,21 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 4: Why are you here */}
+              {/* Step 4: AI-generated why options */}
               {step === 3 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Lightbulb className="w-7 h-7 text-primary" />
                     <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Why are you using Pathwise?</h2>
                   </div>
-                  <p className="text-muted-foreground mb-8">Select all that apply — this helps us give better recommendations.</p>
+                  <p className="text-muted-foreground mb-2">Select all that apply — these were generated based on your situation.</p>
+                  {aiQuestions && (
+                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Personalized by AI for your profile
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-3">
-                    {getWhyOptions(profile.stage).map((opt) => (
+                    {whyOptions.map((opt) => (
                       <ToggleChip
                         key={opt}
                         label={opt}
@@ -644,16 +537,21 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 5: Career interests */}
+              {/* Step 5: AI-generated career options */}
               {step === 4 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Target className="w-7 h-7 text-primary" />
                     <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Careers you want to explore</h2>
                   </div>
-                  <p className="text-muted-foreground mb-8">Pick the fields you're curious about — we'll build your roadmap around these.</p>
+                  <p className="text-muted-foreground mb-2">Pick the fields you're curious about — AI will build your roadmap around these.</p>
+                  {aiQuestions && (
+                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Curated by AI based on your answers
+                    </p>
+                  )}
                   <div className="flex flex-wrap gap-3">
-                    {getCareerOptions(profile.stage).map((opt) => (
+                    {careerOptions.map((opt) => (
                       <ToggleChip
                         key={opt}
                         label={opt}
@@ -680,11 +578,20 @@ export default function ProfileSetupPage() {
             {step < steps.length - 1 ? (
               <Button
                 className="gradient-cta text-primary-foreground border-0 hover:opacity-90"
-                disabled={!canProceed()}
-                onClick={() => setStep(step + 1)}
+                disabled={!canProceed() || loadingAI}
+                onClick={handleNext}
               >
-                Continue
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {loadingAI ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    AI is thinking...
+                  </>
+                ) : (
+                  <>
+                    Continue
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             ) : (
               <Button
@@ -692,8 +599,17 @@ export default function ProfileSetupPage() {
                 disabled={!canProceed() || saving}
                 onClick={handleSubmit}
               >
-                {saving ? "Saving..." : "Build My Roadmap"}
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Building Roadmap...
+                  </>
+                ) : (
+                  <>
+                    Build My Roadmap
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
               </Button>
             )}
           </div>
