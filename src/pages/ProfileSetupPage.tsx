@@ -99,14 +99,14 @@ function ToggleChip({ label, selected, onClick }: { label: string; selected: boo
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
+      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border whitespace-nowrap ${
         selected
           ? "bg-primary text-primary-foreground border-primary shadow-elevated"
           : "bg-card text-foreground border-border hover:border-primary/30 hover:bg-muted"
       }`}
     >
-      {selected && <CheckCircle2 className="w-4 h-4 inline mr-1.5 -mt-0.5" />}
-      {label}
+      <CheckCircle2 className={`w-4 h-4 shrink-0 transition-opacity ${selected ? "opacity-100" : "opacity-0 w-0 gap-0"}`} />
+      <span>{label}</span>
     </button>
   );
 }
