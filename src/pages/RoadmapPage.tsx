@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  GraduationCap, ChevronDown, ChevronRight, Download, RotateCcw,
-  CheckCircle2, Circle, Calendar, BookOpen, Award, Briefcase, TrendingUp,
+  ChevronDown, ChevronRight, Download, RotateCcw,
+  CheckCircle2, Circle, Calendar, BookOpen, TrendingUp,
   AlertTriangle, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { UserProfile, RoadmapData } from "@/lib/types";
 import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
 import {
-  generateMonthlyPlan, YearPlan, categoryLabels, stageOptions, StageOption, phaseColors,
+  generateMonthlyPlan, YearPlan, categoryLabels, stageOptions, phaseColors,
 } from "@/lib/monthlyPlannerData";
 import DashboardLayout from "@/components/DashboardLayout";
 
@@ -22,61 +22,6 @@ function getProfile(): UserProfile | null {
     const stored = localStorage.getItem("pathwise-profile");
     return stored ? JSON.parse(stored) : null;
   } catch { return null; }
-}
-
-function getSavedStage(): string | null {
-  try { return localStorage.getItem("pathwise-selected-stage"); } catch { return null; }
-}
-
-// ─── Stage Selector ──────────────────────────────────────
-function StageSelector({ onSelect }: { onSelect: (stage: StageOption) => void }) {
-  const groups = ["High School", "Running Start", "College", "Other"];
-
-  return (
-    <DashboardLayout>
-      <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-8">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-          <div className="w-14 h-14 rounded-2xl gradient-cta flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-2">
-            Where are you right now?
-          </h1>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            Select your current stage so we can build a personalized, time-sensitive roadmap starting from exactly where you are.
-          </p>
-        </motion.div>
-
-        {groups.map((group, gi) => (
-          <motion.div key={group} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + gi * 0.08 }}>
-            <p className="section-label mb-3">{group}</p>
-            <div className="grid gap-2">
-              {stageOptions.filter(s => s.group === group).map((stage) => (
-                <button
-                  key={stage.id}
-                  onClick={() => onSelect(stage)}
-                  className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border/40 bg-card hover:border-primary/40 hover:shadow-md transition-all group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {stage.label}
-                      </span>
-                      <Badge variant="secondary" className={`text-[10px] ${phaseColors[stage.phaseTag] || ""}`}>
-                        {stage.phaseTag}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{stage.description}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </DashboardLayout>
-  );
 }
 
 // ─── Month Block ─────────────────────────────────────────
@@ -103,7 +48,11 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
               key={action.id}
               onClick={() => onToggle(action.id)}
               className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border transition-all ${
-                isDone ? "border-accent/20 bg-accent/5 opacity-70" : action.urgent ? "border-orange-400/40 bg-orange-500/5 hover:border-orange-400/60 hover:shadow-sm" : "border-border/40 bg-card hover:border-border/60 hover:shadow-sm"
+                isDone
+                  ? "border-accent/20 bg-accent/5 opacity-70"
+                  : action.urgent
+                  ? "border-destructive/40 bg-destructive/5 hover:border-destructive/60 hover:shadow-sm"
+                  : "border-border/40 bg-card hover:border-border/60 hover:shadow-sm"
               }`}
             >
               {isDone ? (
@@ -117,7 +66,7 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
                     {action.title}
                   </p>
                   {action.urgent && !isDone && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-orange-600 dark:text-orange-400">
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-destructive">
                       <AlertTriangle className="w-3 h-3" />
                       Urgent
                     </span>
@@ -199,8 +148,7 @@ export default function RoadmapPage() {
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const [monthlyPlan, setMonthlyPlan] = useState<YearPlan[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
-  const [selectedStage, setSelectedStage] = useState<StageOption | null>(null);
-  const [showSelector, setShowSelector] = useState(false);
+  const [stageName, setStageName] = useState("");
 
   useEffect(() => {
     const p = getProfile();
@@ -208,19 +156,29 @@ export default function RoadmapPage() {
     setProfile(p);
     setRoadmap(generatePlaceholderRoadmap(p));
 
-    // Check for saved stage
-    const savedStageId = getSavedStage();
+    // Auto-detect stage from onboarding
+    const savedStageId = localStorage.getItem("pathwise-selected-stage");
     if (savedStageId) {
       const found = stageOptions.find(s => s.id === savedStageId);
       if (found) {
-        setSelectedStage(found);
+        setStageName(found.label);
         const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
         setMonthlyPlan(generateMonthlyPlan(found.id, interests));
       } else {
-        setShowSelector(true);
+        // Fallback: derive from educationLevel
+        const fallbackId = deriveFallbackStage(p.educationLevel);
+        const fallbackStage = stageOptions.find(s => s.id === fallbackId);
+        setStageName(fallbackStage?.label || p.educationLevel);
+        const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+        setMonthlyPlan(generateMonthlyPlan(fallbackId, interests));
       }
     } else {
-      setShowSelector(true);
+      // No stage saved — derive from education level
+      const fallbackId = deriveFallbackStage(p.educationLevel);
+      const fallbackStage = stageOptions.find(s => s.id === fallbackId);
+      setStageName(fallbackStage?.label || p.educationLevel);
+      const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+      setMonthlyPlan(generateMonthlyPlan(fallbackId, interests));
     }
 
     try {
@@ -228,21 +186,6 @@ export default function RoadmapPage() {
       if (saved) setCompletedIds(new Set(JSON.parse(saved)));
     } catch {}
   }, [navigate]);
-
-  const handleStageSelect = (stage: StageOption) => {
-    setSelectedStage(stage);
-    setShowSelector(false);
-    localStorage.setItem("pathwise-selected-stage", stage.id);
-
-    if (profile) {
-      const interests = profile.careerInterests?.length > 0 ? profile.careerInterests : profile.interests;
-      setMonthlyPlan(generateMonthlyPlan(stage.id, interests));
-    }
-
-    // Clear completed when switching stages
-    setCompletedIds(new Set());
-    localStorage.removeItem("pathwise-planner-completed");
-  };
 
   const toggleAction = (id: string) => {
     setCompletedIds(prev => {
@@ -254,7 +197,7 @@ export default function RoadmapPage() {
   };
 
   const handleSave = () => {
-    const data = { profile, roadmap, monthlyPlan, stage: selectedStage, completedIds: [...completedIds], savedAt: new Date().toISOString() };
+    const data = { profile, roadmap, monthlyPlan, completedIds: [...completedIds], savedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -263,11 +206,6 @@ export default function RoadmapPage() {
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  // Show stage selector if no stage chosen
-  if (showSelector || !selectedStage) {
-    return <StageSelector onSelect={handleStageSelect} />;
-  }
 
   if (!profile || !roadmap) return null;
 
@@ -282,32 +220,20 @@ export default function RoadmapPage() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Academic Planner</h1>
+            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Your Roadmap</h1>
             <p className="text-muted-foreground text-sm">
-              Personalized for <span className="font-semibold text-foreground">{selectedStage.label}</span> · {totalDone}/{allActions.length} actions completed
-              {totalUrgent > 0 && <span className="text-orange-600 dark:text-orange-400 font-semibold"> · {totalUrgent} urgent</span>}
+              Built for <span className="font-semibold text-foreground">{stageName}</span> · {totalDone}/{allActions.length} actions completed
+              {totalUrgent > 0 && <span className="text-destructive font-semibold"> · {totalUrgent} urgent</span>}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => { setShowSelector(true); setSelectedStage(null); }}>
-              <RotateCcw className="w-4 h-4 mr-2" />Change Stage
+            <Button variant="outline" size="sm" onClick={() => navigate("/profile-setup")}>
+              <RotateCcw className="w-4 h-4 mr-2" />Update Profile
             </Button>
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Download className="w-4 h-4 mr-2" />Export
             </Button>
           </div>
-        </motion.div>
-
-        {/* Stage Info */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-          <Card className="border-none shadow-[var(--shadow-card)]">
-            <CardContent className="p-4 flex items-center gap-4 flex-wrap">
-              <Badge className={`text-xs px-3 py-1 ${phaseColors[selectedStage.phaseTag] || ""}`}>
-                Phase: {selectedStage.phaseTag}
-              </Badge>
-              <p className="text-xs text-muted-foreground flex-1">{selectedStage.description}</p>
-            </CardContent>
-          </Card>
         </motion.div>
 
         {/* Overall Progress */}
@@ -361,4 +287,13 @@ export default function RoadmapPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function deriveFallbackStage(educationLevel: string): string {
+  const level = educationLevel?.toLowerCase() || "";
+  if (level.includes("high")) return "11th";
+  if (level.includes("college") || level.includes("university")) return "col-fresh";
+  if (level.includes("professional") || level.includes("working")) return "early-pro";
+  if (level.includes("running")) return "rs-1";
+  return "11th";
 }
