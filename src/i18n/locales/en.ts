@@ -17,9 +17,9 @@ const en = {
     "nav.language": "Language",
 
     // Dashboard
-    "dashboard.goodMorning": "Good morning",
-    "dashboard.goodAfternoon": "Good afternoon",
-    "dashboard.goodEvening": "Good evening",
+    "dashboard.goodMorning": "Good morning, {{name}}!",
+    "dashboard.goodAfternoon": "Good afternoon, {{name}}!",
+    "dashboard.goodEvening": "Good evening, {{name}}!",
     "dashboard.yourJourney": "Your Journey",
     "dashboard.complete": "complete",
     "dashboard.tasksDone": "{{count}} task done",
