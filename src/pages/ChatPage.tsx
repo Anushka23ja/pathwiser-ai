@@ -43,13 +43,11 @@ export default function ChatPage() {
 
   const detectAgentCommand = (text: string): { type: string; params: any } | null => {
     const lower = text.toLowerCase();
-    // Detect plan generation
     const planPatterns = [/create a plan (?:to |for )(.+)/i, /plan to (.+)/i, /become (?:a |an )(.+)/i, /i want to be (?:a |an )(.+)/i, /help me become (.+)/i, /generate (?:a )?plan (?:for |to )(.+)/i];
     for (const pattern of planPatterns) {
       const match = text.match(pattern);
       if (match) return { type: "generate_plan", params: { goalTitle: match[1].trim() } };
     }
-    // Detect pivot
     const pivotPatterns = [/switch (?:from )(.+?) to (.+)/i, /pivot (?:from )(.+?) to (.+)/i, /change (?:from )(.+?) to (.+)/i, /transition (?:from )(.+?) to (.+)/i];
     for (const pattern of pivotPatterns) {
       const match = text.match(pattern);
@@ -64,7 +62,6 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
-    // Check for agent commands first
     const command = detectAgentCommand(text);
     if (command) {
       const agentMsgId = (Date.now() + 1).toString();
@@ -95,14 +92,11 @@ export default function ChatPage() {
       return;
     }
 
-    // Regular chat flow
     setIsStreaming(true);
-
     const profile = getUserProfile();
     const apiMessages = [...messages.filter(m => m.id !== "welcome"), userMsg].map(m => ({ role: m.role, content: m.content }));
     let assistantSoFar = "";
     const assistantId = (Date.now() + 1).toString();
-
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -151,7 +145,6 @@ export default function ChatPage() {
           } catch { textBuffer = line + "\n" + textBuffer; break; }
         }
       }
-      // Final flush
       if (textBuffer.trim()) {
         for (let raw of textBuffer.split("\n")) {
           if (!raw) continue;
@@ -183,14 +176,18 @@ export default function ChatPage() {
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-3.5rem)]">
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-4 py-6">
-          <div className="max-w-2xl mx-auto space-y-4">
+        <div className="flex-1 overflow-y-auto px-3 sm:px-4 py-4 sm:py-6 bg-muted/30">
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
             {messages.map((msg) => (
-              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "assistant" ? "gradient-cta" : "bg-muted"}`}>
-                  {msg.role === "assistant" ? <Bot className="w-4 h-4 text-primary-foreground" /> : <User className="w-4 h-4 text-muted-foreground" />}
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-2 sm:gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "assistant" ? "gradient-cta" : "bg-primary"}`}>
+                  {msg.role === "assistant" ? <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" /> : <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />}
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card border border-border/50 text-foreground prose prose-sm max-w-none" : "bg-primary text-primary-foreground whitespace-pre-wrap"}`}>
+                <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 text-sm leading-relaxed ${
+                  msg.role === "assistant"
+                    ? "bg-card border border-border shadow-sm text-foreground prose prose-sm max-w-none"
+                    : "bg-primary text-primary-foreground shadow-md"
+                }`}>
                   {msg.role === "assistant" ? (
                     <ReactMarkdown components={{
                       a: ({ href, children }) => {
@@ -205,11 +202,11 @@ export default function ChatPage() {
               </motion.div>
             ))}
             {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full gradient-cta flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2 sm:gap-3">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full gradient-cta flex items-center justify-center shrink-0">
+                  <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary-foreground" />
                 </div>
-                <div className="bg-card border border-border/50 rounded-2xl px-4 py-3">
+                <div className="bg-card border border-border shadow-sm rounded-2xl px-4 py-3">
                   <div className="flex gap-1">
                     <div className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse-soft" />
                     <div className="w-2 h-2 rounded-full bg-muted-foreground animate-pulse-soft" style={{ animationDelay: "0.3s" }} />
@@ -224,7 +221,7 @@ export default function ChatPage() {
 
         {/* Suggestions */}
         {messages.length <= 1 && (
-          <div className="px-4 pb-2">
+          <div className="px-3 sm:px-4 pb-2">
             <div className="max-w-2xl mx-auto flex flex-wrap gap-2">
               {suggestions.map((s) => (
                 <button key={s} onClick={() => sendMessage(s)} className="px-3 py-1.5 rounded-full text-xs font-medium border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all">
@@ -235,18 +232,18 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* Input */}
-        <div className="border-t border-border px-4 py-4 shrink-0">
+        {/* Input - higher contrast */}
+        <div className="border-t-2 border-border bg-card px-3 sm:px-4 py-3 sm:py-4 shrink-0">
           <div className="max-w-2xl mx-auto">
-            <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); sendMessage(input); }} className="flex gap-2 sm:gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={agentWorking ? "Agent is working..." : "Ask anything or give a command like 'Create a plan to...'"}
-                className="flex-1 px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-sm"
+                placeholder={agentWorking ? "Agent is working..." : "Type your message..."}
+                className="flex-1 px-4 py-3 rounded-xl border-2 border-border bg-background text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all text-sm"
               />
-              <Button type="submit" disabled={!input.trim() || isStreaming || agentWorking} className="gradient-cta text-primary-foreground border-0 hover:opacity-90 px-4">
+              <Button type="submit" disabled={!input.trim() || isStreaming || agentWorking} className="gradient-cta text-primary-foreground border-0 hover:opacity-90 px-4 min-h-[44px]">
                 {agentWorking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </form>

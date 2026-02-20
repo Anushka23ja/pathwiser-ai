@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UserProfile } from "@/lib/types";
 import { CareerRole, getCareersForProfile } from "@/lib/careerData";
 import { InterdisciplinaryRole, availableFields, getInterdisciplinaryRoles } from "@/lib/interdisciplinaryData";
+import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardLayout from "@/components/DashboardLayout";
 
 function getProfile(): UserProfile | null {
@@ -29,32 +30,35 @@ const categoryConfig = {
   hybrid: { label: "Hybrid & Non-Traditional", icon: Shuffle, description: "Roles that blend multiple disciplines. Great for interdisciplinary thinkers." },
 };
 
-// Mainstream roles = popular category
 const isMainstream = (role: CareerRole) => role.category === "popular";
 
-// ── Field Selector ──
+// ── Field Selector (compact on mobile) ──
 function FieldSelector({ selected, onChange }: { selected: string[]; onChange: (f: string[]) => void }) {
+  const isMobile = useIsMobile();
+  const [showAll, setShowAll] = useState(false);
+  const visibleFields = isMobile && !showAll ? availableFields.slice(0, 6) : availableFields;
+
   return (
     <Card className="premium-card overflow-hidden">
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center">
-            <Layers className="w-5 h-5 text-primary" />
+      <CardContent className="p-3 sm:p-6">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-primary/8 flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-display font-bold text-foreground text-sm">Combine Your Interests</h3>
-            <p className="text-xs text-muted-foreground">Select 2+ fields to discover interdisciplinary roles tailored to your unique combination</p>
+            {!isMobile && <p className="text-xs text-muted-foreground">Select 2+ fields to discover interdisciplinary roles tailored to your unique combination</p>}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {availableFields.map(field => {
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          {visibleFields.map(field => {
             const active = selected.includes(field);
             return (
               <button
                 key={field}
                 onClick={() => onChange(active ? selected.filter(f => f !== field) : [...selected, field])}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs font-medium transition-all ${
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -64,11 +68,18 @@ function FieldSelector({ selected, onChange }: { selected: string[]; onChange: (
               </button>
             );
           })}
+          {isMobile && !showAll && availableFields.length > 6 && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="px-2.5 py-1 rounded-full text-xs font-medium text-primary hover:underline"
+            >
+              +{availableFields.length - 6} more
+            </button>
+          )}
         </div>
 
         {selected.length > 0 && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/40">
-            <span className="text-xs text-muted-foreground">Selected:</span>
+          <div className="flex items-center gap-1.5 sm:gap-2 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border/40 flex-wrap">
             {selected.map(f => (
               <Badge key={f} className="text-[10px] bg-primary/10 text-primary border-primary/20 gap-1">
                 {f}
@@ -78,7 +89,7 @@ function FieldSelector({ selected, onChange }: { selected: string[]; onChange: (
               </Badge>
             ))}
             <button onClick={() => onChange([])} className="text-[10px] text-muted-foreground hover:text-foreground ml-auto">
-              Clear all
+              Clear
             </button>
           </div>
         )}
@@ -172,7 +183,7 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
   );
 }
 
-// ── Skills Roadmap Visual ──
+// �── Skills Roadmap Visual ──
 function SkillsRoadmap({ skills }: { skills: string[] }) {
   const levels = ["Beginner", "Intermediate", "Advanced"];
   const perLevel = Math.ceil(skills.length / 3);
@@ -260,7 +271,6 @@ function RoleCard({ role, userInterests }: { role: CareerRole; userInterests: st
                     {role.relatedRoles.map(r => <span key={r} className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">{r}</span>)}
                   </div>
                 </div>
-                {/* Personalized note */}
                 {userInterests.length > 0 && (
                   <div className="p-3 rounded-xl bg-primary/5 border border-primary/15">
                     <p className="text-xs text-foreground flex items-start gap-2">
@@ -282,6 +292,7 @@ function RoleCard({ role, userInterests }: { role: CareerRole; userInterests: st
 
 export default function CareersPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [careers, setCareers] = useState<ReturnType<typeof getCareersForProfile> | null>(null);
@@ -321,7 +332,6 @@ export default function CareersPage() {
 
   const userInterests = profile.careerInterests?.length > 0 ? profile.careerInterests : profile.interests;
 
-  // Filter by search
   const filterRoles = (roles: CareerRole[]) => {
     if (!searchQuery.trim()) return roles;
     const q = searchQuery.toLowerCase();
@@ -348,12 +358,14 @@ export default function CareersPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-8">
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-5 sm:space-y-8">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Career Explorer</h1>
-          <p className="text-muted-foreground text-sm max-w-lg">
-            Select multiple fields to discover interdisciplinary roles, or explore curated career paths below.
-          </p>
+          <h1 className="text-xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Career Explorer</h1>
+          {!isMobile && (
+            <p className="text-muted-foreground text-sm max-w-lg">
+              Select multiple fields to discover interdisciplinary roles, or explore curated career paths below.
+            </p>
+          )}
         </motion.div>
 
         {/* Search */}
@@ -361,7 +373,7 @@ export default function CareersPage() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search careers by title, skill, or field..."
+              placeholder="Search careers..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="pl-10 h-10 bg-card border-border/50"
@@ -377,16 +389,18 @@ export default function CareersPage() {
         {/* Interdisciplinary Matches */}
         {filteredInterdisciplinary.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
               <Layers className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-display font-bold text-foreground uppercase tracking-wide">
                 Interdisciplinary Matches
               </h2>
-              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{filteredInterdisciplinary.length} roles</Badge>
+              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{filteredInterdisciplinary.length}</Badge>
             </div>
-            <p className="text-xs text-muted-foreground mb-4 -mt-2">
-              Unique roles that combine {selectedFields.join(" + ")} — these are where cross-field knowledge creates the most value.
-            </p>
+            {!isMobile && (
+              <p className="text-xs text-muted-foreground mb-4 -mt-2">
+                Unique roles that combine {selectedFields.join(" + ")} — these are where cross-field knowledge creates the most value.
+              </p>
+            )}
             <div className="space-y-3">
               {filteredInterdisciplinary.map((role, i) => (
                 <motion.div key={role.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}>
@@ -397,21 +411,24 @@ export default function CareersPage() {
           </motion.div>
         )}
 
-        {/* Tabbed career sections */}
+        {/* Tabbed career sections - more prominent tabs */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-xl overflow-x-auto flex-nowrap">
-              <TabsTrigger value="popular" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
-                <Briefcase className="w-3.5 h-3.5" /> Popular
-                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.popular.length}</Badge>
+            <TabsList className="w-full grid grid-cols-3 bg-muted p-1 rounded-xl h-auto">
+              <TabsTrigger value="popular" className="gap-1 text-xs data-[state=active]:shadow-md data-[state=active]:bg-card rounded-lg min-h-[42px] font-semibold">
+                <Briefcase className="w-3.5 h-3.5" />
+                {isMobile ? "" : "Popular"}
+                <Badge variant="secondary" className="text-[9px] ml-0.5">{sections.popular.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="emerging" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
-                <Sparkles className="w-3.5 h-3.5" /> Emerging
-                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.emerging.length}</Badge>
+              <TabsTrigger value="emerging" className="gap-1 text-xs data-[state=active]:shadow-md data-[state=active]:bg-card rounded-lg min-h-[42px] font-semibold">
+                <Sparkles className="w-3.5 h-3.5" />
+                {isMobile ? "" : "Emerging"}
+                <Badge variant="secondary" className="text-[9px] ml-0.5">{sections.emerging.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="hybrid" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
-                <Shuffle className="w-3.5 h-3.5" /> Hybrid
-                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.hybrid.length}</Badge>
+              <TabsTrigger value="hybrid" className="gap-1 text-xs data-[state=active]:shadow-md data-[state=active]:bg-card rounded-lg min-h-[42px] font-semibold">
+                <Shuffle className="w-3.5 h-3.5" />
+                {isMobile ? "" : "Hybrid"}
+                <Badge variant="secondary" className="text-[9px] ml-0.5">{sections.hybrid.length}</Badge>
               </TabsTrigger>
             </TabsList>
 

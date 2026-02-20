@@ -474,19 +474,7 @@ export default function RoadmapPage() {
           </motion.div>
         )}
 
-        {/* Category Color Legend */}
-        {usedCategories.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-              {usedCategories.map(cat => (
-                <div key={cat} className="flex items-center gap-1.5">
-                  <div className={`w-3 h-1 rounded-full ${categoryColorsBg[cat] || "bg-border"}`} />
-                  <span className="text-[10px] text-muted-foreground capitalize">{categoryLabels[cat]?.split(" ")[0] || cat}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        {/* Category legend removed for cleaner mobile UX */}
 
         {/* Overall Progress */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
