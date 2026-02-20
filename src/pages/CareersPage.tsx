@@ -36,7 +36,7 @@ const isMainstream = (role: CareerRole) => role.category === "popular";
 function FieldSelector({ selected, onChange }: { selected: string[]; onChange: (f: string[]) => void }) {
   return (
     <Card className="premium-card overflow-hidden">
-      <CardContent className="p-5 sm:p-6">
+      <CardContent className="p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-primary/8 flex items-center justify-center">
             <Layers className="w-5 h-5 text-primary" />
@@ -206,7 +206,7 @@ function RoleCard({ role, userInterests }: { role: CareerRole; userInterests: st
   return (
     <Card className="premium-card-hover overflow-hidden">
       <CardContent className="p-0">
-        <button className="w-full text-left p-5 flex items-start gap-4" onClick={() => setExpanded(!expanded)}>
+        <button className="w-full text-left p-4 sm:p-5 flex items-start gap-3 sm:gap-4" onClick={() => setExpanded(!expanded)}>
           <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
             <Briefcase className="w-5 h-5 text-primary" />
           </div>
@@ -400,18 +400,18 @@ export default function CareersPage() {
         {/* Tabbed career sections */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger value="popular" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+            <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-xl overflow-x-auto flex-nowrap">
+              <TabsTrigger value="popular" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
                 <Briefcase className="w-3.5 h-3.5" /> Popular
-                <Badge variant="secondary" className="text-[9px] ml-1">{sections.popular.length}</Badge>
+                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.popular.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="emerging" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+              <TabsTrigger value="emerging" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
                 <Sparkles className="w-3.5 h-3.5" /> Emerging
-                <Badge variant="secondary" className="text-[9px] ml-1">{sections.emerging.length}</Badge>
+                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.emerging.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="hybrid" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+              <TabsTrigger value="hybrid" className="gap-1 sm:gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg shrink-0 min-h-[44px]">
                 <Shuffle className="w-3.5 h-3.5" /> Hybrid
-                <Badge variant="secondary" className="text-[9px] ml-1">{sections.hybrid.length}</Badge>
+                <Badge variant="secondary" className="text-[9px] ml-0.5 sm:ml-1">{sections.hybrid.length}</Badge>
               </TabsTrigger>
             </TabsList>
 
