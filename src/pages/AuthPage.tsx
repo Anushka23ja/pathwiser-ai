@@ -160,6 +160,32 @@ export default function AuthPage() {
             </Button>
           </form>
 
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading}
+            className="w-full py-3 text-base border-border"
+            onClick={async () => {
+              setLoading(true);
+              try {
+                const { error } = await supabase.auth.signInAnonymously();
+                if (error) throw error;
+                navigate("/profile-setup");
+              } catch (error: any) {
+                toast({ title: "Error", description: error.message, variant: "destructive" });
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            Continue as Guest
+          </Button>
+
           <p className="text-center text-sm text-muted-foreground mt-6">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
             <button
