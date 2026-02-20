@@ -60,10 +60,16 @@ const fallbackDetailOptions: Record<string, { label: string; description: string
 };
 
 const fallbackWhyOptions = [
-  "I don't know what career to pick",
-  "I want to switch my major or career",
-  "I need help planning my next steps",
-  "I want to find higher-paying opportunities",
+  "Explore career options",
+  "Switch major or career",
+  "Plan my next steps",
+  "Find better-paying paths",
+  "Build a strong foundation",
+  "Discover my passions",
+  "Prep for college admissions",
+  "Try new activities",
+  "Understand how I learn",
+  "Prepare for future challenges",
 ];
 
 const fallbackCareerOptions = [
@@ -89,7 +95,7 @@ function ToggleChip({ label, selected, onClick }: { label: string; selected: boo
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border whitespace-nowrap ${
+      className={`inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 border ${
         selected
           ? "bg-primary text-primary-foreground border-primary shadow-elevated"
           : "bg-card text-foreground border-border hover:border-primary/30 hover:bg-muted"
@@ -338,7 +344,7 @@ export default function ProfileSetupPage() {
         />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-12 overflow-y-auto">
         <div className="w-full max-w-2xl">
           <AnimatePresence mode="wait">
             <motion.div
