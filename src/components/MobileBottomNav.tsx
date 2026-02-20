@@ -1,11 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Map, Briefcase, MessageCircle, Settings } from "lucide-react";
+import { LayoutDashboard, Map, Compass, MessageCircle, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { label: "Home", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Roadmap", icon: Map, path: "/roadmap" },
-  { label: "Careers", icon: Briefcase, path: "/careers" },
+  { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Chat", icon: MessageCircle, path: "/chat" },
   { label: "Settings", icon: Settings, path: "/settings" },
 ];
