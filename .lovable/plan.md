@@ -1,28 +1,51 @@
 
 
-# Replace Careers with Explore in Navigation
+# Onboarding Tutorial: Highlight Actual Nav Items
 
-A straightforward swap in two navigation components.
+Instead of just showing a centered modal, each tutorial step (after the welcome) will visually point to the actual navigation item in the bottom nav bar on mobile (or sidebar on desktop).
 
 ---
 
-## Changes
+## How It Works
 
-### 1. Mobile Bottom Nav (`src/components/MobileBottomNav.tsx`)
-- Replace the "Careers" tab (Briefcase icon, `/careers` path) with "Explore" (Compass icon, `/explore` path)
+1. **Step 0 (Welcome)** -- stays as a centered modal, no highlight
+2. **Steps 1-4 (Roadmap, Chat, Careers, Explore)** -- each step:
+   - Adds a `data-tutorial` attribute to the matching bottom nav button (e.g., `data-tutorial="roadmap"`)
+   - The tutorial overlay finds that element using `querySelector`, gets its position with `getBoundingClientRect()`
+   - A "spotlight" cutout appears around the nav icon, with a tooltip card positioned above it pointing down with an arrow
+   - On desktop, it highlights the sidebar item instead
 
-### 2. Sidebar (`src/components/AppSidebar.tsx`)
-- Move the Explore item higher in the `mainItems` list (swap position with Careers, or place it where Careers currently sits)
-- Careers remains in the sidebar but moves to a less prominent position
+## Visual Design
+
+- Dark overlay covers the screen with a transparent "hole" around the highlighted nav item
+- A floating tooltip card appears above the highlighted item with the icon, title, description, progress dots, and next/back buttons
+- A small arrow/caret points from the card down to the highlighted element
 
 ---
 
 ## Technical Details
 
-| File | Change |
-|------|--------|
-| `src/components/MobileBottomNav.tsx` | Change Careers tab to Explore: update label, icon (`Compass`), and path (`/explore`) |
-| `src/components/AppSidebar.tsx` | Reorder `mainItems` so Explore appears before Careers |
+### File: `src/components/MobileBottomNav.tsx`
+- Add `data-tutorial="roadmap"`, `data-tutorial="explore"`, etc. to each nav button so the tutorial can find them
 
-No route changes needed -- both `/explore` and `/careers` routes already exist.
+### File: `src/components/AppSidebar.tsx`
+- Add matching `data-tutorial` attributes to sidebar nav items
 
+### File: `src/components/OnboardingTutorial.tsx`
+- For steps 1-4, use `document.querySelector('[data-tutorial="roadmap"]')` etc. to locate the target element
+- Use `getBoundingClientRect()` to get position and size
+- Render the overlay with a CSS clip-path or SVG mask to create a spotlight cutout around the target
+- Position the tooltip card above (or beside) the highlighted element
+- Add a resize/scroll listener to recalculate position if needed
+- Step 0 remains centered (no highlight target)
+
+### Step-to-selector mapping:
+| Step | Title | Selector |
+|------|-------|----------|
+| 0 | Welcome to Pathwise | (centered, no highlight) |
+| 1 | Your Roadmap | `[data-tutorial="roadmap"]` |
+| 2 | AI Advisor | `[data-tutorial="chat"]` |
+| 3 | Explore Careers | `[data-tutorial="careers"]` |
+| 4 | Explore Page | `[data-tutorial="explore"]` |
+
+No new dependencies needed -- positioning is done with vanilla DOM APIs and existing framer-motion for animations.
