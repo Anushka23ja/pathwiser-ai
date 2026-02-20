@@ -8,6 +8,7 @@ import {
   Bot,
   Settings,
   Target,
+  Compass,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -25,6 +26,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Action Center", url: "/actions", icon: Target },
   { title: "My Roadmap", url: "/roadmap", icon: Map },
+  { title: "Explore", url: "/explore", icon: Compass },
   { title: "Schools", url: "/schools", icon: GraduationCap },
   { title: "Careers", url: "/careers", icon: Briefcase },
   { title: "Companies", url: "/companies", icon: Building2 },
