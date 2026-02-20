@@ -93,7 +93,7 @@ RESPOND WITH EXACTLY THIS JSON FORMAT (no markdown, no extra text):
     } else if (action === "suggest_next_actions") {
       const completedTasks = context?.completedTasks || [];
       const currentGoals = context?.currentGoals || [];
-      systemPrompt = `You are a proactive AI career advisor. Based on the user's progress, suggest what they should do next.
+      systemPrompt = `You are a proactive AI career advisor. Based on the user's progress, suggest what they should do next. Also identify missed milestones, suggest hidden/unconventional career paths they haven't explored, and explain why recommendations may have changed.
 
 RESPOND WITH EXACTLY THIS JSON FORMAT (no markdown, no extra text):
 {
@@ -105,12 +105,28 @@ RESPOND WITH EXACTLY THIS JSON FORMAT (no markdown, no extra text):
       "reasoning": "string - why this is important now"
     }
   ],
+  "missedMilestones": [
+    {
+      "title": "string - overdue or stalling milestone",
+      "severity": "warning|critical",
+      "suggestion": "string - how to get back on track"
+    }
+  ],
+  "hiddenPaths": [
+    {
+      "title": "string - unconventional career suggestion",
+      "whyRelevant": "string - connection to user's interests"
+    }
+  ],
   "progressInsight": "string - observation about their progress",
   "shouldRevisePlan": false,
-  "revisionReason": "string - only if shouldRevisePlan is true"
+  "revisionReason": "string - only if shouldRevisePlan is true",
+  "refreshReason": "string - why these recommendations were generated or changed"
 }
 
-Provide 3-5 actionable suggestions.`;
+Provide 3-5 actionable suggestions. Identify 1-3 missed milestones if any tasks are overdue or goals stalling. Suggest 1-2 hidden career paths based on the user's unique combination of interests.`;
+
+      userPrompt = `${profileContext}\n\nCompleted tasks: ${JSON.stringify(completedTasks)}\nCurrent goals: ${JSON.stringify(currentGoals)}\n\nWhat should they focus on next? Also flag any missed milestones and suggest hidden career paths.`;
 
       userPrompt = `${profileContext}\n\nCompleted tasks: ${JSON.stringify(completedTasks)}\nCurrent goals: ${JSON.stringify(currentGoals)}\n\nWhat should they focus on next?`;
     } else {
