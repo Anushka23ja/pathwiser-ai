@@ -10,7 +10,7 @@ const steps = [
   {
     icon: Sparkles,
     title: "Welcome to Pathwise",
-    description: "Your AI-powered guide to career planning and education. Let's show you around!",
+    description: "Your AI-powered career & education guide. Here's a quick tour!",
     color: "hsl(234 62% 45%)",
   },
   {
@@ -18,28 +18,24 @@ const steps = [
     title: "Your Roadmap",
     description: "A personalized monthly plan with tasks to keep you on track.",
     color: "hsl(168 45% 45%)",
-    path: "/roadmap",
   },
   {
     icon: Bot,
-    title: "AI Advisor",
-    description: "Chat with an AI mentor for guidance on any career question.",
+    title: "AI Chatbot",
+    description: "Ask any career or school question — get instant, personalized advice.",
     color: "hsl(258 55% 48%)",
-    path: "/chat",
-  },
-  {
-    icon: Briefcase,
-    title: "Explore Careers",
-    description: "Discover careers that match your interests and skills.",
-    color: "hsl(40 95% 50%)",
-    path: "/careers",
   },
   {
     icon: Compass,
-    title: "Explore Page",
-    description: "Browse interdisciplinary paths and trending opportunities.",
+    title: "Explore",
+    description: "Browse trending paths, interdisciplinary careers & new opportunities.",
     color: "hsl(200 70% 50%)",
-    path: "/explore",
+  },
+  {
+    icon: Briefcase,
+    title: "Networking Starters",
+    description: "Find connections, events & outreach templates to grow your network.",
+    color: "hsl(40 95% 50%)",
   },
 ];
 
