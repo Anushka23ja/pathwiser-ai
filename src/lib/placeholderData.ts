@@ -99,15 +99,120 @@ const careerFieldMap: Record<string, { majors: string[]; careers: { title: strin
   },
 };
 
+// Detail-specific tips that get injected into the roadmap
+const detailTips: Record<string, { activities: string[]; altPath?: { title: string; description: string } }> = {
+  "Running Start / Dual Enrollment": {
+    activities: [
+      "Enroll in Running Start or dual enrollment to earn free college credits",
+      "Meet with your high school counselor to map Running Start courses to degree requirements",
+      "Connect with Running Start advisors at your local community college",
+    ],
+    altPath: { title: "Running Start Fast-Track", description: "Complete your Associate's degree while finishing high school — enter university as a junior and save 2 years of tuition." },
+  },
+  "First-Generation College Student": {
+    activities: [
+      "Apply to first-gen support programs (TRIO, Upward Bound, QuestBridge)",
+      "Seek first-gen scholarships — many colleges offer dedicated funding",
+      "Connect with first-gen mentors and student organizations on campus",
+    ],
+    altPath: { title: "First-Gen Support Networks", description: "Leverage programs specifically designed for first-generation students — from application help to on-campus mentorship and financial aid." },
+  },
+  "AP / IB Courses": {
+    activities: [
+      "Take AP/IB exams to earn college credit and strengthen your application",
+      "Focus on AP/IB subjects aligned with your intended major",
+      "Use AP/IB scores to place out of introductory college courses",
+    ],
+  },
+  "College Prep & Applications": {
+    activities: [
+      "Start SAT/ACT prep early — aim for your target school's score range",
+      "Draft and revise college essays with teachers or counselors",
+      "Research and apply for scholarships well before deadlines",
+    ],
+  },
+  "Trade / Vocational Path": {
+    activities: [
+      "Research apprenticeship programs in your area of interest",
+      "Visit trade schools and attend open houses",
+      "Look into union-sponsored training programs with paid apprenticeships",
+    ],
+    altPath: { title: "Skilled Trades Fast-Track", description: "Enter a paid apprenticeship or trade program — earn while you learn, with no student debt and high demand in the job market." },
+  },
+  "Financial Aid & Scholarships": {
+    activities: [
+      "File FAFSA as early as possible each year",
+      "Research state-specific grants and institutional scholarships",
+      "Apply to at least 10 scholarships — cast a wide net",
+    ],
+  },
+  "Thinking of Switching Majors": {
+    activities: [
+      "Talk to your academic advisor about switching without losing credits",
+      "Take exploratory courses in your new area of interest",
+      "Connect with students in the major you're considering",
+    ],
+  },
+  "Transfer Student": {
+    activities: [
+      "Research transfer agreements between your current and target schools",
+      "Maintain a strong GPA — transfer admission is competitive",
+      "Visit target campuses and meet with transfer admission counselors",
+    ],
+  },
+  "Graduate School Prep": {
+    activities: [
+      "Start GRE/GMAT/MCAT/LSAT prep based on your target program",
+      "Build relationships with professors for strong recommendation letters",
+      "Gain research or professional experience relevant to your grad program",
+    ],
+  },
+  "Internship & Co-op Search": {
+    activities: [
+      "Apply to internships 6 months before the start date",
+      "Build your LinkedIn profile and portfolio",
+      "Attend career fairs and networking events on campus",
+    ],
+  },
+  "Career Switch": {
+    activities: [
+      "Identify transferable skills from your current role",
+      "Take online courses or earn certificates in your target field",
+      "Network with professionals who've made similar transitions",
+    ],
+    altPath: { title: "Career Pivot Program", description: "Use your existing experience as a foundation — many career switchers leverage transferable skills to enter new fields faster than fresh graduates." },
+  },
+  "Certifications & Upskilling": {
+    activities: [
+      "Research the most valued certifications in your target field",
+      "Set a 3–6 month timeline to complete your first certification",
+      "Look for employer-sponsored certification programs",
+    ],
+  },
+  "Bootcamp or Accelerated Program": {
+    activities: [
+      "Compare bootcamps by job placement rate, not just price",
+      "Look for income share agreement (ISA) options to reduce upfront cost",
+      "Build portfolio projects during the program for job applications",
+    ],
+    altPath: { title: "Intensive Bootcamp", description: "Complete a 12–24 week intensive program — many offer career coaching and job placement guarantees to help you land a role fast." },
+  },
+  "Leadership & Management": {
+    activities: [
+      "Seek stretch assignments and cross-functional projects at work",
+      "Consider an MBA or leadership certificate program",
+      "Find a mentor in a leadership role you aspire to",
+    ],
+  },
+};
+
 export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
-  // Use career interests to build personalized data
   const primaryField = profile.interests[0] || profile.careerInterests[0] || "Software & Tech";
   const fieldData = careerFieldMap[primaryField] || careerFieldMap["Software & Tech"];
 
-  // Combine majors and careers from all selected fields
   const allMajors = new Set<string>();
   const allCareers: { title: string; salary: string; growth: string }[] = [];
-  
+
   for (const field of profile.interests.length > 0 ? profile.interests : profile.careerInterests) {
     const data = careerFieldMap[field];
     if (data) {
@@ -116,7 +221,6 @@ export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
     }
   }
 
-  // Fallback
   if (allMajors.size === 0) fieldData.majors.forEach((m) => allMajors.add(m));
   if (allCareers.length === 0) allCareers.push(...fieldData.careers);
 
@@ -141,7 +245,7 @@ export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
     ],
   };
 
-  const extracurricularsByLevel: Record<string, string[]> = {
+  const baseExtracurriculars: Record<string, string[]> = {
     "High School": [
       "Join relevant clubs and student organizations",
       "Volunteer in your community",
@@ -165,18 +269,43 @@ export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
     ],
   };
 
+  // Build enriched activities from level details
+  const levelDetails = profile.favoriteSubjects || [];
+  const extraActivities: string[] = [];
+  const extraAltPaths: { title: string; description: string }[] = [];
+
+  for (const detail of levelDetails) {
+    const tips = detailTips[detail];
+    if (tips) {
+      extraActivities.push(...tips.activities);
+      if (tips.altPath) extraAltPaths.push(tips.altPath);
+    }
+  }
+
+  const baseActivities = baseExtracurriculars[profile.educationLevel] || baseExtracurriculars["College"];
+  const combinedActivities = [...extraActivities, ...baseActivities];
+  // Deduplicate and limit
+  const uniqueActivities = [...new Set(combinedActivities)].slice(0, 8);
+
+  const defaultAltPaths = [
+    { title: "Bootcamp or Certificate", description: "Fast-track into your field with an intensive program. Great if you want hands-on skills quickly." },
+    { title: "Gap Year / Experience First", description: "Work, travel, or volunteer first to gain clarity. Many successful people took non-linear paths." },
+  ];
+
+  const allAltPaths = extraAltPaths.length > 0
+    ? [...extraAltPaths.slice(0, 2), ...defaultAltPaths.slice(0, 2 - extraAltPaths.length)].slice(0, 3)
+    : defaultAltPaths;
+
   const fieldsStr = (profile.interests.length > 0 ? profile.interests : profile.careerInterests).join(" and ");
+  const detailStr = levelDetails.length > 0 ? ` With your focus on ${levelDetails.slice(0, 2).join(" and ").toLowerCase()}, we've tailored recommendations to match.` : "";
 
   return {
     recommendedMajors: Array.from(allMajors).slice(0, 5),
     possibleCareers: allCareers.slice(0, 5),
     timeline: timelineByLevel[profile.educationLevel] || timelineByLevel["College"],
-    extracurriculars: extracurricularsByLevel[profile.educationLevel] || extracurricularsByLevel["College"],
-    alternativePaths: [
-      { title: "Bootcamp or Certificate", description: "Fast-track into your field with an intensive program. Great if you want hands-on skills quickly." },
-      { title: "Gap Year / Experience First", description: "Work, travel, or volunteer first to gain clarity. Many successful people took non-linear paths." },
-    ],
-    summary: `As a ${profile.educationLevel.toLowerCase()} student interested in ${fieldsStr}, we've built a roadmap focused on ${fieldData.majors[0]} and related fields. Your path includes actionable steps, career options with salary data, and activities to help you stand out.`,
+    extracurriculars: uniqueActivities,
+    alternativePaths: allAltPaths,
+    summary: `As a ${profile.educationLevel.toLowerCase()} student interested in ${fieldsStr}, we've built a roadmap focused on ${fieldData.majors[0]} and related fields.${detailStr} Your path includes actionable steps, career options with salary data, and activities to help you stand out.`,
   };
 }
 
