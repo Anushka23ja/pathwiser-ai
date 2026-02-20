@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Map, Bot, Briefcase, Compass, X, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -12,46 +11,89 @@ const steps = [
     title: "Welcome to Pathwise",
     description: "Your AI-powered guide to career planning and education. Let's show you around!",
     color: "hsl(234 62% 45%)",
+    selector: null,
   },
   {
     icon: Map,
     title: "Your Roadmap",
     description: "A personalized monthly plan with tasks to keep you on track.",
     color: "hsl(168 45% 45%)",
-    path: "/roadmap",
+    selector: '[data-tutorial="roadmap"]',
   },
   {
     icon: Bot,
     title: "AI Advisor",
     description: "Chat with an AI mentor for guidance on any career question.",
     color: "hsl(258 55% 48%)",
-    path: "/chat",
+    selector: '[data-tutorial="chat"]',
   },
   {
     icon: Briefcase,
     title: "Explore Careers",
     description: "Discover careers that match your interests and skills.",
     color: "hsl(40 95% 50%)",
-    path: "/careers",
+    selector: '[data-tutorial="careers"]',
   },
   {
     icon: Compass,
     title: "Explore Page",
     description: "Browse interdisciplinary paths and trending opportunities.",
     color: "hsl(200 70% 50%)",
-    path: "/explore",
+    selector: '[data-tutorial="explore"]',
   },
 ];
+
+interface TargetRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 export default function OnboardingTutorial() {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
-  const navigate = useNavigate();
+  const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
 
   useEffect(() => {
     const done = localStorage.getItem(TUTORIAL_KEY);
     if (!done) setVisible(true);
   }, []);
+
+  const measureTarget = useCallback((selector: string | null) => {
+    if (!selector) {
+      setTargetRect(null);
+      return;
+    }
+    const el = document.querySelector(selector);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setTargetRect({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      });
+    } else {
+      setTargetRect(null);
+    }
+  }, []);
+
+  // Measure on step change
+  useEffect(() => {
+    if (!visible) return;
+    // Small delay to let layout settle
+    const timer = setTimeout(() => measureTarget(steps[step].selector), 100);
+    return () => clearTimeout(timer);
+  }, [step, visible, measureTarget]);
+
+  // Re-measure on resize
+  useEffect(() => {
+    if (!visible) return;
+    const handler = () => measureTarget(steps[step].selector);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [step, visible, measureTarget]);
 
   const finish = () => {
     localStorage.setItem(TUTORIAL_KEY, "true");
@@ -72,6 +114,31 @@ export default function OnboardingTutorial() {
   const current = steps[step];
   const Icon = current.icon;
   const isLast = step === steps.length - 1;
+  const hasTarget = current.selector && targetRect;
+  const padding = 6;
+
+  // Spotlight cutout dimensions
+  const cutout = targetRect
+    ? {
+        x: targetRect.left - padding,
+        y: targetRect.top - padding,
+        w: targetRect.width + padding * 2,
+        h: targetRect.height + padding * 2,
+        r: 12,
+      }
+    : null;
+
+  // Tooltip positioning: above the target element
+  const tooltipStyle: React.CSSProperties = hasTarget
+    ? {
+        position: "fixed",
+        bottom: `${window.innerHeight - targetRect.top + 16}px`,
+        left: `${targetRect.left + targetRect.width / 2}px`,
+        transform: "translateX(-50%)",
+      }
+    : {
+        position: "relative",
+      };
 
   return (
     <AnimatePresence>
@@ -79,16 +146,61 @@ export default function OnboardingTutorial() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/60 backdrop-blur-sm p-4"
+        className={cn(
+          "fixed inset-0 z-[100] flex items-center justify-center p-4",
+          !hasTarget && "bg-foreground/60 backdrop-blur-sm"
+        )}
       >
+        {/* SVG overlay with spotlight cutout */}
+        {hasTarget && cutout && (
+          <svg
+            className="fixed inset-0 w-full h-full z-[100] pointer-events-none"
+            style={{ pointerEvents: "none" }}
+          >
+            <defs>
+              <mask id="tutorial-mask">
+                <rect width="100%" height="100%" fill="white" />
+                <rect
+                  x={cutout.x}
+                  y={cutout.y}
+                  width={cutout.w}
+                  height={cutout.h}
+                  rx={cutout.r}
+                  fill="black"
+                />
+              </mask>
+            </defs>
+            <rect
+              width="100%"
+              height="100%"
+              fill="rgba(0,0,0,0.65)"
+              mask="url(#tutorial-mask)"
+              style={{ pointerEvents: "all" }}
+              onClick={finish}
+            />
+          </svg>
+        )}
+
+        {/* Tooltip card */}
         <motion.div
           key={step}
-          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          initial={{ opacity: 0, y: hasTarget ? 12 : 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -24, scale: 0.97 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-sm bg-card rounded-2xl shadow-[var(--shadow-elevated)] border border-border/50 overflow-hidden"
+          exit={{ opacity: 0, y: -12, scale: 0.97 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className={cn(
+            "relative z-[101] w-full max-w-xs bg-card rounded-2xl shadow-[var(--shadow-elevated)] border border-border/50 overflow-visible",
+            !hasTarget && "shadow-2xl"
+          )}
+          style={tooltipStyle}
         >
+          {/* Arrow pointing down to target */}
+          {hasTarget && (
+            <div
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-card border-r border-b border-border/50"
+            />
+          )}
+
           {/* Close button */}
           <button
             onClick={finish}
@@ -97,21 +209,19 @@ export default function OnboardingTutorial() {
             <X className="w-4 h-4" />
           </button>
 
-          {/* Icon hero */}
-          <div
-            className="flex items-center justify-center pt-8 pb-4"
-          >
+          {/* Icon */}
+          <div className="flex items-center justify-center pt-6 pb-3">
             <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
+              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
               style={{ background: current.color }}
             >
-              <Icon className="w-8 h-8 text-white" />
+              <Icon className="w-6 h-6 text-white" />
             </div>
           </div>
 
           {/* Content */}
-          <div className="px-6 pb-2 text-center">
-            <h2 className="text-lg font-display font-bold text-foreground mb-1.5">
+          <div className="px-5 pb-1.5 text-center">
+            <h2 className="text-base font-display font-bold text-foreground mb-1">
               {current.title}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -120,20 +230,20 @@ export default function OnboardingTutorial() {
           </div>
 
           {/* Progress dots */}
-          <div className="flex items-center justify-center gap-1.5 py-4">
+          <div className="flex items-center justify-center gap-1.5 py-3">
             {steps.map((_, i) => (
               <div
                 key={i}
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
-                  i === step ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/25"
+                  i === step ? "w-5 bg-primary" : "w-1.5 bg-muted-foreground/25"
                 )}
               />
             ))}
           </div>
 
           {/* Actions */}
-          <div className="px-6 pb-6 flex items-center justify-between gap-3">
+          <div className="px-5 pb-5 flex items-center justify-between gap-3">
             {step > 0 ? (
               <button
                 onClick={prev}
@@ -153,7 +263,7 @@ export default function OnboardingTutorial() {
 
             <button
               onClick={next}
-              className="flex items-center gap-1.5 text-sm font-semibold text-primary-foreground px-5 py-2.5 rounded-xl transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
+              className="flex items-center gap-1.5 text-sm font-semibold text-primary-foreground px-5 py-2 rounded-xl transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
               style={{ background: current.color }}
             >
               {isLast ? "Get Started" : "Next"}
