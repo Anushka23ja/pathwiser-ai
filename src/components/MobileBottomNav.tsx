@@ -3,11 +3,11 @@ import { LayoutDashboard, Map, Compass, MessageCircle, Settings } from "lucide-r
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { label: "Home", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Roadmap", icon: Map, path: "/roadmap" },
-  { label: "Explore", icon: Compass, path: "/explore" },
-  { label: "Chat", icon: MessageCircle, path: "/chat" },
-  { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "Home", icon: LayoutDashboard, path: "/dashboard", tutorialKey: "dashboard" },
+  { label: "Roadmap", icon: Map, path: "/roadmap", tutorialKey: "roadmap" },
+  { label: "Explore", icon: Compass, path: "/explore", tutorialKey: "explore" },
+  { label: "Chat", icon: MessageCircle, path: "/chat", tutorialKey: "chat" },
+  { label: "Settings", icon: Settings, path: "/settings", tutorialKey: "settings" },
 ];
 
 export default function MobileBottomNav() {
@@ -22,6 +22,7 @@ export default function MobileBottomNav() {
           return (
             <button
               key={tab.path}
+              data-tutorial={tab.tutorialKey}
               onClick={() => navigate(tab.path)}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-colors",
