@@ -88,6 +88,86 @@ export const exploreTopics: ExploreTopic[] = [
     tags: ["trades", "apprenticeship", "vocational", "earn while learning"],
   },
 
+  // ── Career Fields ──
+  {
+    id: "software-engineering",
+    title: "Software Engineering",
+    category: "career-fields",
+    audience: ["high-school", "college", "professional"],
+    overview: "Design, build, and maintain software systems — from mobile apps to cloud infrastructure. One of the most in-demand and well-compensated career paths, with opportunities in virtually every industry.",
+    pros: ["Median salary $120K–$200K+ at top companies", "Remote-friendly with flexible work options", "Massive job market across all industries", "Creative problem-solving every day", "Clear growth path from junior to staff/principal"],
+    cons: ["Rapid technology changes require constant learning", "Can involve long hours during crunch periods", "Sedentary work with screen fatigue", "Competitive entry at top-tier companies", "Imposter syndrome is common, especially early on"],
+    eligibility: ["CS degree preferred but not always required", "Strong portfolio and GitHub projects can substitute", "Bootcamp graduates increasingly hired", "Self-taught developers welcome at many companies"],
+    timeline: ["Year 1–2: Learn fundamentals (data structures, algorithms, one language deeply)", "Year 2–3: Build projects, contribute to open source, internships", "Year 3–4: Target internships at mid/large companies", "Post-grad: Entry-level SWE role → mid-level in 2–3 years"],
+    nextSteps: ["Pick a language (Python, JavaScript, or Java) and learn it deeply", "Complete a project-based course (freeCodeCamp, The Odin Project)", "Build 2–3 portfolio projects and push to GitHub", "Practice coding interviews on LeetCode or HackerRank"],
+    tags: ["software", "coding", "tech", "developer", "programming"],
+  },
+  {
+    id: "data-science",
+    title: "Data Science & Analytics",
+    category: "career-fields",
+    audience: ["college", "professional"],
+    overview: "Extract insights from data using statistics, programming, and machine learning. Data scientists help companies make evidence-based decisions. Roles range from analyst to ML engineer to research scientist.",
+    pros: ["High demand across finance, healthcare, tech, and government", "Median salary $100K–$160K", "Intellectually stimulating and varied work", "Growing field with expanding opportunities", "Blend of technical and business skills"],
+    cons: ["Requires strong math/statistics foundation", "Data cleaning is 60–80% of the work", "Tooling and frameworks change rapidly", "Can be isolating without cross-functional collaboration", "Entry-level roles are increasingly competitive"],
+    eligibility: ["Degree in CS, statistics, math, or related field preferred", "Python and SQL proficiency expected", "Understanding of statistics and probability", "Portfolio of data projects demonstrates capability"],
+    timeline: ["Year 1–2: Build foundation in statistics, Python, and SQL", "Year 2–3: Learn ML fundamentals (scikit-learn, pandas, visualization)", "Year 3–4: Complete data-focused internships or Kaggle competitions", "Post-grad: Analyst → Data Scientist → Senior/Lead roles"],
+    nextSteps: ["Learn Python for data analysis (pandas, matplotlib, numpy)", "Take a statistics course (Khan Academy or MIT OpenCourseWare)", "Complete 2–3 projects on real datasets (Kaggle)", "Build a portfolio blog explaining your analyses"],
+    tags: ["data science", "analytics", "machine learning", "statistics", "Python"],
+  },
+  {
+    id: "ux-design",
+    title: "UX/UI Design",
+    category: "career-fields",
+    audience: ["college", "professional"],
+    overview: "Design intuitive, accessible, and delightful user experiences for digital products. UX designers research user needs, prototype solutions, and collaborate with engineers to ship products millions of people use.",
+    pros: ["Creative and empathy-driven work", "Median salary $90K–$140K", "High demand across tech, healthcare, finance", "No CS degree required — portfolio matters most", "Remote-friendly with global opportunities"],
+    cons: ["Subjective feedback can be frustrating", "Stakeholder pushback on design decisions", "Constantly advocating for user needs", "Tools and trends shift frequently", "Junior market is competitive"],
+    eligibility: ["No specific degree required — portfolio is key", "Bootcamps and self-study paths are viable", "Understanding of human psychology is valuable", "Proficiency in Figma, Sketch, or similar tools"],
+    timeline: ["Month 1–3: Learn design fundamentals and tools (Figma)", "Month 3–6: Complete a UX course or bootcamp", "Month 6–9: Build 3–4 case studies for your portfolio", "Month 9–12: Apply for junior UX roles or freelance projects"],
+    nextSteps: ["Start the Google UX Design Certificate on Coursera", "Learn Figma through hands-on redesign exercises", "Read 'Don't Make Me Think' and 'The Design of Everyday Things'", "Join design communities (Dribbble, Behance, ADPList)"],
+    tags: ["UX", "UI", "design", "product design", "Figma"],
+  },
+  {
+    id: "healthcare-careers",
+    title: "Healthcare & Allied Health",
+    category: "career-fields",
+    audience: ["high-school", "college"],
+    overview: "Beyond physicians, healthcare offers diverse roles: nursing, physician assistants, physical therapists, medical technologists, public health specialists, and more. Many paths offer strong job security and meaningful impact.",
+    pros: ["Job security — healthcare is recession-resistant", "Meaningful, purpose-driven work", "Wide range of education levels and roles", "Competitive salaries with growth potential", "Opportunities everywhere — urban and rural"],
+    cons: ["Emotionally and physically demanding", "Burnout rates are high in many roles", "Shift work and irregular hours common", "Extensive education for some paths (MD, PA, PT)", "Exposure to illness and high-stress situations"],
+    eligibility: ["Varies by role: CNA (weeks), RN (2–4 years), PA/MD (6–11+ years)", "Strong science foundation (biology, chemistry, anatomy)", "Clinical volunteer experience recommended", "Certifications and licensure required for most roles"],
+    timeline: ["High school: Take AP Biology/Chemistry, volunteer at hospitals", "College: Complete pre-requisites for your target role", "Post-grad: Licensing exams and clinical rotations", "Career: Specialize, advance to leadership, or pivot within healthcare"],
+    nextSteps: ["Shadow 2–3 different healthcare professionals", "Research the education requirements for roles that interest you", "Volunteer or get certified as a CNA for early clinical experience", "Compare salary, lifestyle, and advancement across healthcare paths"],
+    tags: ["healthcare", "nursing", "physician assistant", "public health", "medical"],
+  },
+  {
+    id: "mlops-devrel",
+    title: "Emerging Tech Roles (MLOps, DevRel, Platform Eng)",
+    category: "career-fields",
+    audience: ["college", "professional"],
+    overview: "Newer, rapidly growing roles at the intersection of engineering and other domains. MLOps engineers manage ML model lifecycle. Developer Relations (DevRel) bridges engineering and community. Platform engineers build internal developer tools.",
+    pros: ["Less competition than traditional SWE roles", "Salaries often match or exceed standard engineering ($130K–$180K+)", "Growing demand as companies mature their tech stacks", "Unique blend of technical and soft skills", "Early career entry means faster advancement"],
+    cons: ["Roles are still being defined at many companies", "Fewer established career ladders", "May require breadth across multiple domains", "Smaller job market compared to traditional roles", "Can be hard to explain to non-tech people"],
+    eligibility: ["Strong engineering fundamentals required", "MLOps: ML knowledge + DevOps/infra skills", "DevRel: Engineering background + communication/content skills", "Platform Eng: Backend engineering + systems thinking"],
+    timeline: ["Year 1–2: Build strong engineering fundamentals", "Year 2–3: Specialize — pick MLOps, DevRel, or Platform Eng", "Year 3–4: Build projects or content in your niche", "Year 4+: Target companies actively hiring for these roles"],
+    nextSteps: ["Explore job descriptions for these roles on LinkedIn", "Build a project in your area of interest (ML pipeline, dev tool, tech blog)", "Join communities like MLOps Community, DevRel Collective", "Attend conferences and meetups focused on your niche"],
+    tags: ["MLOps", "DevRel", "platform engineering", "emerging roles", "niche tech"],
+  },
+  {
+    id: "business-finance",
+    title: "Business, Finance & Consulting",
+    category: "career-fields",
+    audience: ["college", "professional"],
+    overview: "Careers spanning investment banking, management consulting, corporate finance, accounting, and entrepreneurship. These roles drive business strategy, manage capital, and solve complex organizational challenges.",
+    pros: ["High earning potential (especially banking/consulting)", "Transferable skills across industries", "Clear career progression and prestige", "Develops strong analytical and leadership skills", "Global opportunities and travel"],
+    cons: ["Long hours (60–80+ hrs/week in banking/consulting)", "High-pressure, competitive culture", "Work-life balance is challenging early on", "Requires networking-heavy job search", "Some roles are cyclical with economic downturns"],
+    eligibility: ["Business, economics, or finance degree preferred", "Strong analytical and quantitative skills", "Internship experience highly valued", "CFA, CPA, or MBA can accelerate advancement"],
+    timeline: ["Sophomore year: Join finance/consulting clubs, begin networking", "Junior year: Apply for summer internships (deadlines Aug–Jan)", "Senior year: Convert internship to full-time or recruit broadly", "Year 2–5: Specialize, pursue MBA or CFA if desired"],
+    nextSteps: ["Join your university's finance or consulting club", "Prepare for case interviews (consulting) or technical interviews (banking)", "Network with alumni in your target firms", "Read 'Breaking Into Wall Street' or 'Case In Point' for prep"],
+    tags: ["finance", "consulting", "banking", "business", "MBA"],
+  },
+
   // ── Exams & Applications ──
   {
     id: "sat-act",
@@ -295,12 +375,17 @@ export const exploreTopics: ExploreTopic[] = [
 ];
 
 export function getRelevantTopicIds(educationLevel: string): Set<string> {
-  const levelMap: Record<string, AudienceLevel> = {
-    "High School": "high-school",
-    "College": "college",
-    "Professional": "professional",
-  };
-  const audience = levelMap[educationLevel] || "all";
+  const normalized = educationLevel.toLowerCase().trim();
+  let audience: AudienceLevel = "all";
+
+  if (normalized.includes("high school") || normalized.includes("highschool") || normalized.includes("9th") || normalized.includes("10th") || normalized.includes("11th") || normalized.includes("12th") || normalized.includes("freshman") || normalized.includes("sophomore") || normalized.includes("junior") || normalized.includes("senior")) {
+    audience = "high-school";
+  } else if (normalized.includes("college") || normalized.includes("university") || normalized.includes("undergraduate") || normalized.includes("bachelor") || normalized.includes("associate")) {
+    audience = "college";
+  } else if (normalized.includes("professional") || normalized.includes("working") || normalized.includes("career") || normalized.includes("master") || normalized.includes("graduate") || normalized.includes("phd") || normalized.includes("mba")) {
+    audience = "professional";
+  }
+
   return new Set(
     exploreTopics
       .filter(t => t.audience.includes(audience) || t.audience.includes("all"))
