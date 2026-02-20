@@ -50,7 +50,7 @@ export default function LandingPage() {
           <Button
             size="sm"
             className="gradient-cta text-primary-foreground border-0 hover:opacity-90 transition-opacity"
-            onClick={() => navigate("/onboarding")}
+            onClick={() => navigate("/auth")}
           >
             Get Started
           </Button>
@@ -105,7 +105,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 className="gradient-cta text-primary-foreground border-0 hover:opacity-90 transition-opacity text-lg px-8 py-6 shadow-elevated"
-                onClick={() => navigate("/onboarding")}
+                onClick={() => navigate("/auth")}
               >
                 Start My Path
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -185,7 +185,7 @@ export default function LandingPage() {
             <Button
               size="lg"
               className="bg-card text-foreground hover:bg-card/90 text-lg px-8 py-6 shadow-elevated"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/auth")}
             >
               Start My Path
               <ArrowRight className="ml-2 w-5 h-5" />

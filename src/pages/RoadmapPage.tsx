@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { GraduationCap, Briefcase, TrendingUp, Clock, Award, ArrowRight, Download, MessageCircle, RotateCcw } from "lucide-react";
+import { GraduationCap, Briefcase, TrendingUp, Clock, Award, ArrowRight, Download, MessageCircle, RotateCcw, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserProfile, RoadmapData } from "@/lib/types";
 import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
+import { useAuth } from "@/hooks/useAuth";
 
 function LoadingScreen() {
   return (
@@ -24,6 +25,7 @@ function LoadingScreen() {
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
@@ -78,6 +80,9 @@ export default function RoadmapPage() {
             <Button size="sm" className="gradient-cta text-primary-foreground border-0" onClick={() => navigate("/chat")}>
               <MessageCircle className="w-4 h-4 mr-2" />
               Ask AI
+            </Button>
+            <Button variant="ghost" size="sm" onClick={signOut} className="text-muted-foreground hover:text-foreground">
+              <LogOut className="w-4 h-4" />
             </Button>
           </div>
         </div>
