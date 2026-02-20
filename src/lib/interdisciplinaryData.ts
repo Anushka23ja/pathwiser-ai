@@ -1,0 +1,76 @@
+import { CareerRole } from "./careerData";
+
+// ── Field definitions for multi-select ──
+export const availableFields = [
+  "Computer Science", "Business", "Biology", "Design", "Engineering",
+  "Psychology", "Communications", "Law", "Mathematics", "Environmental Science",
+  "Education", "Healthcare", "Data Science", "Art", "Music", "Policy",
+  "Finance", "Marketing", "Physics", "Chemistry",
+];
+
+export interface InterdisciplinaryRole {
+  id: string;
+  title: string;
+  fields: string[];           // which combination produces this
+  salaryRange: string;
+  education: string;
+  recommendedMajors: string[];
+  skills: string[];
+  whyRelevant: string;        // explains the cross-field connection
+  growthRate: string;
+  relatedRoles: string[];
+  dayToDay: string;
+}
+
+// ── Cross-field role database ──
+const crossFieldRoles: InterdisciplinaryRole[] = [
+  // CS + Business
+  { id: "ir1", title: "Technical Product Manager", fields: ["Computer Science", "Business"], salaryRange: "$130K–$190K", education: "BS in CS + MBA (optional)", recommendedMajors: ["Computer Science + Business Minor", "Information Systems", "Business + CS Minor"], skills: ["Product Strategy", "Technical Architecture", "Data Analysis", "Stakeholder Management", "Agile/Scrum"], whyRelevant: "Combines technical depth with business strategy — ideal for leading software products that drive revenue.", growthRate: "20%", relatedRoles: ["Product Manager", "Engineering Manager", "Solutions Architect"], dayToDay: "Define product roadmap, prioritize features with engineering, analyze user data, run sprint ceremonies, present to leadership." },
+  { id: "ir2", title: "Fintech Engineer", fields: ["Computer Science", "Business", "Finance"], salaryRange: "$140K–$200K", education: "BS in CS or Finance + technical skills", recommendedMajors: ["Computer Science + Finance Minor", "Financial Engineering", "Mathematics + CS"], skills: ["Python/Java", "Financial Modeling", "API Development", "Blockchain", "Risk Analysis"], whyRelevant: "Technology is reshaping finance — engineers who understand both financial products and code are in extreme demand.", growthRate: "35%", relatedRoles: ["Quantitative Analyst", "Blockchain Developer", "Financial Software Engineer"], dayToDay: "Build trading platforms, payment systems, or financial APIs. Model risk, optimize performance, and ensure regulatory compliance." },
+  // CS + Design
+  { id: "ir3", title: "Design Engineer", fields: ["Computer Science", "Design"], salaryRange: "$120K–$170K", education: "BS in CS or Design + coding skills", recommendedMajors: ["Human-Computer Interaction", "CS + Design Minor", "Digital Media"], skills: ["React/CSS", "Figma", "Animation (Framer Motion)", "Design Systems", "Accessibility"], whyRelevant: "Engineers who can design create more polished products — this rare combination commands top salaries.", growthRate: "28%", relatedRoles: ["Frontend Engineer", "Creative Technologist", "UX Engineer"], dayToDay: "Build pixel-perfect UIs, create design systems, prototype interactions, bridge design and engineering teams." },
+  // CS + Biology
+  { id: "ir4", title: "Bioinformatics Scientist", fields: ["Computer Science", "Biology"], salaryRange: "$95K–$150K", education: "MS/PhD in Bioinformatics or Computational Biology", recommendedMajors: ["Bioinformatics", "CS + Biology Double Major", "Computational Biology"], skills: ["Python/R", "Genomics", "Machine Learning", "Statistical Analysis", "Molecular Biology"], whyRelevant: "Genomic data is exploding — scientists who can code and understand biology are critical for drug discovery and precision medicine.", growthRate: "15%", relatedRoles: ["Computational Biologist", "Genomics Data Scientist", "Research Scientist"], dayToDay: "Analyze genomic datasets, build ML models for drug discovery, collaborate with lab scientists, publish research." },
+  // Biology + Design
+  { id: "ir5", title: "Medical UX Designer", fields: ["Biology", "Design", "Healthcare"], salaryRange: "$90K–$140K", education: "BS in Design + healthcare domain knowledge", recommendedMajors: ["UX Design + Biology Minor", "Health Informatics", "Biomedical Visualization"], skills: ["Figma", "User Research", "Clinical Workflows", "HIPAA Compliance", "Accessibility"], whyRelevant: "Healthcare products require designers who understand clinical workflows, patient needs, and regulatory constraints.", growthRate: "22%", relatedRoles: ["Health Tech UX Researcher", "Clinical Systems Designer", "Digital Health PM"], dayToDay: "Design patient-facing apps, optimize clinical workflows, run usability studies with healthcare providers, ensure compliance." },
+  // Engineering + Policy
+  { id: "ir6", title: "Technology Policy Analyst", fields: ["Engineering", "Policy", "Law"], salaryRange: "$85K–$140K", education: "BS in Engineering + MPP or JD", recommendedMajors: ["Engineering + Public Policy Minor", "Science & Technology Policy", "Law + Engineering"], skills: ["Policy Analysis", "Technical Writing", "Data Analysis", "Regulatory Frameworks", "Public Speaking"], whyRelevant: "AI regulation, data privacy, and tech policy need people who understand both the technology and governance.", growthRate: "18%", relatedRoles: ["Privacy Engineer", "Regulatory Affairs", "Government Tech Advisor"], dayToDay: "Analyze tech legislation, advise on AI/data policy, testify before committees, bridge engineers and policymakers." },
+  // Psychology + CS
+  { id: "ir7", title: "UX Researcher", fields: ["Psychology", "Computer Science", "Design"], salaryRange: "$100K–$150K", education: "BS/MS in Psychology, HCI, or Cognitive Science", recommendedMajors: ["Psychology + CS Minor", "Human-Computer Interaction", "Cognitive Science"], skills: ["User Research Methods", "Statistics", "A/B Testing", "Survey Design", "Data Analysis"], whyRelevant: "Understanding human cognition + technical systems leads to products people actually want to use.", growthRate: "20%", relatedRoles: ["Product Researcher", "Behavioral Scientist", "Design Strategist"], dayToDay: "Run usability studies, analyze user behavior data, synthesize insights for product teams, define research strategy." },
+  // Marketing + Data Science
+  { id: "ir8", title: "Growth Data Scientist", fields: ["Marketing", "Data Science", "Business"], salaryRange: "$110K–$160K", education: "BS in Statistics/CS + marketing domain knowledge", recommendedMajors: ["Data Science + Marketing Minor", "Business Analytics", "Statistics + Business"], skills: ["Python/SQL", "A/B Testing", "Marketing Analytics", "ML Models", "Growth Modeling"], whyRelevant: "Companies need data scientists who understand marketing funnels, attribution, and user acquisition — not just algorithms.", growthRate: "30%", relatedRoles: ["Marketing Analyst", "Product Analyst", "Growth Engineer"], dayToDay: "Build attribution models, analyze marketing campaigns, run experiments, forecast growth, advise on spending allocation." },
+  // Environmental Science + Engineering
+  { id: "ir9", title: "Climate Tech Engineer", fields: ["Environmental Science", "Engineering", "Physics"], salaryRange: "$90K–$140K", education: "BS/MS in Environmental or Mechanical Engineering", recommendedMajors: ["Environmental Engineering", "Mechanical + Environmental Minor", "Sustainability Engineering"], skills: ["Carbon Accounting", "Energy Systems Design", "LCA Analysis", "CAD/Simulation", "Policy Analysis"], whyRelevant: "Climate change demands engineers who understand both the science and practical engineering solutions.", growthRate: "25%", relatedRoles: ["Sustainability Consultant", "Clean Energy Engineer", "ESG Analyst"], dayToDay: "Design clean energy systems, model carbon footprints, evaluate green tech investments, advise on sustainability strategy." },
+  // Education + CS
+  { id: "ir10", title: "EdTech Product Designer", fields: ["Education", "Computer Science", "Design"], salaryRange: "$100K–$150K", education: "BS in CS or Education + design skills", recommendedMajors: ["CS + Education Minor", "Learning Design & Technology", "Instructional Design"], skills: ["Product Design", "Learning Theory", "Prototyping", "Data Analytics", "Accessibility"], whyRelevant: "Building effective learning products requires understanding pedagogy, UX, and technology — a rare triple threat.", growthRate: "22%", relatedRoles: ["Learning Experience Designer", "EdTech PM", "Curriculum Developer"], dayToDay: "Design learning experiences, prototype educational tools, analyze learning data, collaborate with educators and engineers." },
+  // Law + CS
+  { id: "ir11", title: "Legal Engineer", fields: ["Law", "Computer Science"], salaryRange: "$100K–$160K", education: "JD + technical skills or BS CS + legal knowledge", recommendedMajors: ["CS + Pre-Law", "Legal Studies + CS Minor", "Information Science"], skills: ["Contract Automation", "Legal Tech", "Process Design", "Compliance Frameworks", "Data Privacy"], whyRelevant: "Legal processes are being automated — professionals who bridge law and technology command premium salaries.", growthRate: "22%", relatedRoles: ["Legal Operations Manager", "Privacy Engineer", "Compliance Analyst"], dayToDay: "Build legal tech solutions, automate contract workflows, design compliance systems, bridge legal and engineering." },
+  // Finance + Mathematics
+  { id: "ir12", title: "Quantitative Analyst", fields: ["Finance", "Mathematics", "Data Science"], salaryRange: "$150K–$300K+", education: "MS/PhD in Math, Physics, or Financial Engineering", recommendedMajors: ["Mathematics + Finance", "Financial Engineering", "Statistics + Economics"], skills: ["Python/C++", "Stochastic Calculus", "Statistical Modeling", "Risk Management", "Machine Learning"], whyRelevant: "Quants use mathematical models to price derivatives, manage risk, and develop trading strategies — extremely lucrative.", growthRate: "20%", relatedRoles: ["Risk Analyst", "Algorithmic Trader", "Financial Engineer"], dayToDay: "Build pricing models, backtest trading strategies, analyze market data, present risk reports, optimize portfolios." },
+  // CS + Healthcare
+  { id: "ir13", title: "Health Informatics Engineer", fields: ["Computer Science", "Healthcare", "Biology"], salaryRange: "$100K–$145K", education: "BS/MS in Health Informatics or CS", recommendedMajors: ["Health Informatics", "CS + Public Health Minor", "Biomedical Informatics"], skills: ["EHR Systems", "FHIR/HL7", "Data Analytics", "HIPAA Compliance", "SQL/Python"], whyRelevant: "Digital health is booming — engineers who understand clinical data systems are essential for hospitals and health tech.", growthRate: "17%", relatedRoles: ["Clinical Data Analyst", "Health IT Manager", "Digital Health PM"], dayToDay: "Build healthcare data pipelines, integrate EHR systems, analyze patient outcomes, ensure regulatory compliance." },
+  // Art + CS
+  { id: "ir14", title: "Creative Technologist", fields: ["Art", "Computer Science", "Design"], salaryRange: "$90K–$150K", education: "BS in Design/CS or self-taught", recommendedMajors: ["Digital Media", "CS + Art Minor", "Interactive Media"], skills: ["Creative Coding", "WebGL/Three.js", "Generative Art", "Interaction Design", "Prototyping"], whyRelevant: "Blending art and code creates experiences that wow — from interactive installations to generative art and immersive web.", growthRate: "18%", relatedRoles: ["Frontend Engineer", "Motion Designer", "XR Developer"], dayToDay: "Build immersive digital experiences, create interactive installations, prototype novel interfaces, push design boundaries." },
+  // Communications + Business
+  { id: "ir15", title: "Brand Strategist", fields: ["Communications", "Business", "Marketing"], salaryRange: "$80K–$130K", education: "BS in Marketing, Communications, or Business", recommendedMajors: ["Marketing + Communications", "Brand Management", "Business + Media Minor"], skills: ["Brand Strategy", "Content Marketing", "Market Research", "Storytelling", "Analytics"], whyRelevant: "Great brands are built at the intersection of business strategy and compelling communication.", growthRate: "12%", relatedRoles: ["Marketing Director", "Content Strategist", "Creative Director"], dayToDay: "Develop brand positioning, create content strategies, analyze market trends, manage creative campaigns." },
+  // Music + CS
+  { id: "ir16", title: "Audio/Music Tech Engineer", fields: ["Music", "Computer Science", "Engineering"], salaryRange: "$85K–$140K", education: "BS in Music Technology, CS, or Audio Engineering", recommendedMajors: ["Music Technology", "CS + Music Minor", "Electrical Engineering + Audio"], skills: ["DSP", "Python/C++", "Audio APIs", "Machine Learning", "Music Theory"], whyRelevant: "Streaming, AI music generation, and spatial audio need engineers who understand both sound and software.", growthRate: "15%", relatedRoles: ["Audio Software Developer", "Sound Designer", "ML Audio Researcher"], dayToDay: "Build audio processing tools, develop music recommendation systems, create spatial audio experiences, optimize streaming." },
+];
+
+export function getInterdisciplinaryRoles(selectedFields: string[]): InterdisciplinaryRole[] {
+  if (selectedFields.length === 0) return [];
+
+  const fieldsLower = selectedFields.map(f => f.toLowerCase());
+
+  return crossFieldRoles
+    .map(role => {
+      // Count how many of the role's required fields match selected fields
+      const matchCount = role.fields.filter(rf =>
+        fieldsLower.some(sf => rf.toLowerCase().includes(sf) || sf.includes(rf.toLowerCase()))
+      ).length;
+      return { role, matchCount, matchRatio: matchCount / role.fields.length };
+    })
+    .filter(({ matchCount }) => matchCount >= 2 || (selectedFields.length === 1 && matchCount >= 1))
+    .sort((a, b) => b.matchRatio - a.matchRatio || b.matchCount - a.matchCount)
+    .map(({ role }) => role);
+}
