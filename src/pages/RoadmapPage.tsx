@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, ChevronDown, ChevronRight, Download, RotateCcw,
   CheckCircle2, Circle, Calendar, BookOpen, Award, Briefcase, TrendingUp,
+  AlertTriangle, Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { UserProfile, RoadmapData } from "@/lib/types";
 import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
-import { generateMonthlyPlan, YearPlan, categoryLabels } from "@/lib/monthlyPlannerData";
+import {
+  generateMonthlyPlan, YearPlan, categoryLabels, stageOptions, StageOption, phaseColors,
+} from "@/lib/monthlyPlannerData";
 import DashboardLayout from "@/components/DashboardLayout";
 
 function getProfile(): UserProfile | null {
@@ -21,14 +24,69 @@ function getProfile(): UserProfile | null {
   } catch { return null; }
 }
 
+function getSavedStage(): string | null {
+  try { return localStorage.getItem("pathwise-selected-stage"); } catch { return null; }
+}
+
+// ─── Stage Selector ──────────────────────────────────────
+function StageSelector({ onSelect }: { onSelect: (stage: StageOption) => void }) {
+  const groups = ["High School", "Running Start", "College", "Other"];
+
+  return (
+    <DashboardLayout>
+      <div className="p-4 sm:p-8 max-w-3xl mx-auto space-y-8">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+          <div className="w-14 h-14 rounded-2xl gradient-cta flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="w-7 h-7 text-primary-foreground" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-2">
+            Where are you right now?
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            Select your current stage so we can build a personalized, time-sensitive roadmap starting from exactly where you are.
+          </p>
+        </motion.div>
+
+        {groups.map((group, gi) => (
+          <motion.div key={group} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + gi * 0.08 }}>
+            <p className="section-label mb-3">{group}</p>
+            <div className="grid gap-2">
+              {stageOptions.filter(s => s.group === group).map((stage) => (
+                <button
+                  key={stage.id}
+                  onClick={() => onSelect(stage)}
+                  className="w-full text-left flex items-center gap-4 p-4 rounded-xl border border-border/40 bg-card hover:border-primary/40 hover:shadow-md transition-all group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {stage.label}
+                      </span>
+                      <Badge variant="secondary" className={`text-[10px] ${phaseColors[stage.phaseTag] || ""}`}>
+                        {stage.phaseTag}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{stage.description}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 transition-colors" />
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </DashboardLayout>
+  );
+}
+
+// ─── Month Block ─────────────────────────────────────────
 function MonthBlock({ month, actions, onToggle, completedIds }: {
   month: string;
-  actions: { id: string; title: string; description: string; category: string }[];
+  actions: { id: string; title: string; description: string; category: string; urgent?: boolean }[];
   onToggle: (id: string) => void;
   completedIds: Set<string>;
 }) {
   const done = actions.filter(a => completedIds.has(a.id)).length;
-  const progress = Math.round((done / actions.length) * 100);
 
   return (
     <div className="pl-6 border-l-2 border-border/60 ml-4 pb-4 last:pb-0">
@@ -45,7 +103,7 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
               key={action.id}
               onClick={() => onToggle(action.id)}
               className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border transition-all ${
-                isDone ? "border-accent/20 bg-accent/5 opacity-70" : "border-border/40 bg-card hover:border-border/60 hover:shadow-sm"
+                isDone ? "border-accent/20 bg-accent/5 opacity-70" : action.urgent ? "border-orange-400/40 bg-orange-500/5 hover:border-orange-400/60 hover:shadow-sm" : "border-border/40 bg-card hover:border-border/60 hover:shadow-sm"
               }`}
             >
               {isDone ? (
@@ -54,9 +112,17 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
                 <Circle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
               )}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                  {action.title}
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                    {action.title}
+                  </p>
+                  {action.urgent && !isDone && (
+                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-orange-600 dark:text-orange-400">
+                      <AlertTriangle className="w-3 h-3" />
+                      Urgent
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
               </div>
               <span className="text-[10px] text-muted-foreground shrink-0">{categoryLabels[action.category]?.split(" ")[0]}</span>
@@ -68,6 +134,7 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
   );
 }
 
+// ─── Year Block ──────────────────────────────────────────
 function YearBlock({ yearPlan, completedIds, onToggle }: {
   yearPlan: YearPlan;
   completedIds: Set<string>;
@@ -77,6 +144,7 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
   const allActions = yearPlan.months.flatMap(m => m.actions);
   const done = allActions.filter(a => completedIds.has(a.id)).length;
   const progress = allActions.length > 0 ? Math.round((done / allActions.length) * 100) : 0;
+  const urgentCount = allActions.filter(a => a.urgent && !completedIds.has(a.id)).length;
 
   return (
     <Card className="premium-card overflow-hidden">
@@ -88,6 +156,16 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-display font-bold text-foreground">{yearPlan.year}</h3>
             <Badge variant="secondary" className="text-[10px]">{yearPlan.label}</Badge>
+            {yearPlan.phase && (
+              <Badge variant="outline" className={`text-[10px] ${phaseColors[yearPlan.phase] || ""}`}>
+                {yearPlan.phase}
+              </Badge>
+            )}
+            {urgentCount > 0 && (
+              <Badge variant="destructive" className="text-[10px] gap-0.5">
+                <Zap className="w-3 h-3" /> {urgentCount} urgent
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground mt-1">{yearPlan.description}</p>
           <div className="flex items-center gap-3 mt-3">
@@ -114,27 +192,57 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
   );
 }
 
+// ─── Main Page ───────────────────────────────────────────
 export default function RoadmapPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const [monthlyPlan, setMonthlyPlan] = useState<YearPlan[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [selectedStage, setSelectedStage] = useState<StageOption | null>(null);
+  const [showSelector, setShowSelector] = useState(false);
 
   useEffect(() => {
     const p = getProfile();
     if (!p) { navigate("/profile-setup"); return; }
     setProfile(p);
     setRoadmap(generatePlaceholderRoadmap(p));
-    const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
-    setMonthlyPlan(generateMonthlyPlan(p.educationLevel, interests));
 
-    // Load completed items from localStorage
+    // Check for saved stage
+    const savedStageId = getSavedStage();
+    if (savedStageId) {
+      const found = stageOptions.find(s => s.id === savedStageId);
+      if (found) {
+        setSelectedStage(found);
+        const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+        setMonthlyPlan(generateMonthlyPlan(found.id, interests));
+      } else {
+        setShowSelector(true);
+      }
+    } else {
+      setShowSelector(true);
+    }
+
     try {
       const saved = localStorage.getItem("pathwise-planner-completed");
       if (saved) setCompletedIds(new Set(JSON.parse(saved)));
     } catch {}
   }, [navigate]);
+
+  const handleStageSelect = (stage: StageOption) => {
+    setSelectedStage(stage);
+    setShowSelector(false);
+    localStorage.setItem("pathwise-selected-stage", stage.id);
+
+    if (profile) {
+      const interests = profile.careerInterests?.length > 0 ? profile.careerInterests : profile.interests;
+      setMonthlyPlan(generateMonthlyPlan(stage.id, interests));
+    }
+
+    // Clear completed when switching stages
+    setCompletedIds(new Set());
+    localStorage.removeItem("pathwise-planner-completed");
+  };
 
   const toggleAction = (id: string) => {
     setCompletedIds(prev => {
@@ -146,7 +254,7 @@ export default function RoadmapPage() {
   };
 
   const handleSave = () => {
-    const data = { profile, roadmap, monthlyPlan, completedIds: [...completedIds], savedAt: new Date().toISOString() };
+    const data = { profile, roadmap, monthlyPlan, stage: selectedStage, completedIds: [...completedIds], savedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -156,11 +264,17 @@ export default function RoadmapPage() {
     URL.revokeObjectURL(url);
   };
 
+  // Show stage selector if no stage chosen
+  if (showSelector || !selectedStage) {
+    return <StageSelector onSelect={handleStageSelect} />;
+  }
+
   if (!profile || !roadmap) return null;
 
   const allActions = monthlyPlan.flatMap(y => y.months.flatMap(m => m.actions));
   const totalDone = allActions.filter(a => completedIds.has(a.id)).length;
   const totalProgress = allActions.length > 0 ? Math.round((totalDone / allActions.length) * 100) : 0;
+  const totalUrgent = allActions.filter(a => a.urgent && !completedIds.has(a.id)).length;
 
   return (
     <DashboardLayout>
@@ -170,17 +284,30 @@ export default function RoadmapPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Academic Planner</h1>
             <p className="text-muted-foreground text-sm">
-              Month-by-month guide for your {profile.educationLevel.toLowerCase()} journey · {totalDone}/{allActions.length} actions completed
+              Personalized for <span className="font-semibold text-foreground">{selectedStage.label}</span> · {totalDone}/{allActions.length} actions completed
+              {totalUrgent > 0 && <span className="text-orange-600 dark:text-orange-400 font-semibold"> · {totalUrgent} urgent</span>}
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => { setShowSelector(true); setSelectedStage(null); }}>
+              <RotateCcw className="w-4 h-4 mr-2" />Change Stage
+            </Button>
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Download className="w-4 h-4 mr-2" />Export
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/profile-setup")}>
-              <RotateCcw className="w-4 h-4 mr-2" />Retake
-            </Button>
           </div>
+        </motion.div>
+
+        {/* Stage Info */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Card className="border-none shadow-[var(--shadow-card)]">
+            <CardContent className="p-4 flex items-center gap-4 flex-wrap">
+              <Badge className={`text-xs px-3 py-1 ${phaseColors[selectedStage.phaseTag] || ""}`}>
+                Phase: {selectedStage.phaseTag}
+              </Badge>
+              <p className="text-xs text-muted-foreground flex-1">{selectedStage.description}</p>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Overall Progress */}
@@ -216,10 +343,10 @@ export default function RoadmapPage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Majors", value: roadmap.recommendedMajors.length, icon: Award },
-              { label: "Careers", value: roadmap.possibleCareers.length, icon: Briefcase },
               { label: "Actions", value: allActions.length, icon: BookOpen },
-              { label: "Growth Fields", value: roadmap.possibleCareers.filter(c => parseInt(c.growth) > 15).length, icon: TrendingUp },
+              { label: "Completed", value: totalDone, icon: CheckCircle2 },
+              { label: "Urgent", value: totalUrgent, icon: AlertTriangle },
+              { label: "Progress", value: `${totalProgress}%`, icon: TrendingUp },
             ].map(stat => (
               <Card key={stat.label} className="premium-card">
                 <CardContent className="p-4 text-center">
