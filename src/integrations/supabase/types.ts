@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          budget_concern: string | null
+          career_interests: string[] | null
+          created_at: string
+          education_level: string | null
+          favorite_subjects: string[] | null
+          gpa_range: string | null
+          grade_year: string | null
+          id: string
+          interests: string[] | null
+          location: string | null
+          long_term_goals: string[] | null
+          school_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_concern?: string | null
+          career_interests?: string[] | null
+          created_at?: string
+          education_level?: string | null
+          favorite_subjects?: string[] | null
+          gpa_range?: string | null
+          grade_year?: string | null
+          id?: string
+          interests?: string[] | null
+          location?: string | null
+          long_term_goals?: string[] | null
+          school_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_concern?: string | null
+          career_interests?: string[] | null
+          created_at?: string
+          education_level?: string | null
+          favorite_subjects?: string[] | null
+          gpa_range?: string | null
+          grade_year?: string | null
+          id?: string
+          interests?: string[] | null
+          location?: string | null
+          long_term_goals?: string[] | null
+          school_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
