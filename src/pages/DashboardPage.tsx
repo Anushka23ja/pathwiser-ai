@@ -16,6 +16,7 @@ import { getSchoolsForProfile, getCompaniesForProfile } from "@/lib/mockData";
 import { useGoals } from "@/hooks/useGoals";
 import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useAuth } from "@/hooks/useAuth";
 
 function getProfile(): UserProfile | null {
   try {
@@ -27,6 +28,8 @@ function getProfile(): UserProfile | null {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const displayName = user?.user_metadata?.full_name?.split(" ")[0] || "Pathwiser";
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const { goals, tasks, fetchGoals } = useGoals();
@@ -52,9 +55,9 @@ export default function DashboardPage() {
 
   function getGreeting() {
     const h = new Date().getHours();
-    if (h < 12) return t("dashboard.goodMorning");
-    if (h < 17) return t("dashboard.goodAfternoon");
-    return t("dashboard.goodEvening");
+    if (h < 12) return t("dashboard.goodMorning", { name: displayName });
+    if (h < 17) return t("dashboard.goodAfternoon", { name: displayName });
+    return t("dashboard.goodEvening", { name: displayName });
   }
 
   const focusItems = [
