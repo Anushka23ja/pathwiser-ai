@@ -29,21 +29,21 @@ export function AppSidebar() {
   const { t } = useTranslation();
 
   const mainItems = [
-    { title: t("nav.dashboard"), url: "/dashboard", icon: LayoutDashboard, tutorialKey: "dashboard" },
-    { title: t("nav.actionCenter"), url: "/actions", icon: Target, tutorialKey: "actions" },
-    { title: t("nav.roadmap"), url: "/roadmap", icon: Map, tutorialKey: "roadmap" },
-    { title: t("nav.schools"), url: "/schools", icon: GraduationCap, tutorialKey: "schools" },
-    { title: t("nav.explore"), url: "/explore", icon: Compass, tutorialKey: "explore" },
-    { title: t("nav.careers"), url: "/careers", icon: Briefcase, tutorialKey: "careers" },
-    { title: t("nav.companies"), url: "/companies", icon: Building2, tutorialKey: "companies" },
-    { title: t("nav.networking"), url: "/networking", icon: Users, tutorialKey: "networking" },
+    { title: t("nav.dashboard"), url: "/dashboard", icon: LayoutDashboard },
+    { title: t("nav.actionCenter"), url: "/actions", icon: Target },
+    { title: t("nav.roadmap"), url: "/roadmap", icon: Map },
+    { title: t("nav.schools"), url: "/schools", icon: GraduationCap },
+    { title: t("nav.explore"), url: "/explore", icon: Compass },
+    { title: t("nav.careers"), url: "/careers", icon: Briefcase },
+    { title: t("nav.companies"), url: "/companies", icon: Building2 },
+    { title: t("nav.networking"), url: "/networking", icon: Users },
   ];
 
   const toolItems = [
-    { title: t("nav.aiAdvisor"), url: "/chat", icon: Bot, tutorialKey: "chat" },
-    { title: t("nav.voiceAdvisor"), url: "/voice", icon: Headphones, tutorialKey: "voice" },
-    { title: t("nav.language"), url: "/settings#language", icon: Globe, tutorialKey: "language" },
-    { title: t("nav.settings"), url: "/settings", icon: Settings, tutorialKey: "settings" },
+    { title: t("nav.aiAdvisor"), url: "/chat", icon: Bot },
+    { title: t("nav.voiceAdvisor"), url: "/voice", icon: Headphones },
+    { title: t("nav.language"), url: "/settings#language", icon: Globe },
+    { title: t("nav.settings"), url: "/settings", icon: Settings },
   ];
 
   return (
@@ -65,7 +65,6 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      data-tutorial={item.tutorialKey}
                       className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
                       activeClassName="bg-sidebar-accent text-foreground font-semibold"
                     >
@@ -88,7 +87,6 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      data-tutorial={item.tutorialKey}
                       className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
                       activeClassName="bg-sidebar-accent text-foreground font-semibold"
                     >
