@@ -209,7 +209,7 @@ export default function RoadmapPage() {
         </div>
 
         <div className="text-center">
-          <Button variant="outline" onClick={() => navigate("/onboarding")} className="border-border">
+          <Button variant="outline" onClick={() => navigate("/profile-setup")} className="border-border">
             <RotateCcw className="w-4 h-4 mr-2" />
             Retake Assessment
           </Button>

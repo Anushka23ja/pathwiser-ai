@@ -1,14 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import heroBg from "@/assets/hero-bg.png";
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false); // Default to signup
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
@@ -37,7 +38,7 @@ export default function AuthPage() {
         if (error) throw error;
         toast({
           title: "Check your email!",
-          description: "We sent you a confirmation link. Please verify your email to continue.",
+          description: "We sent you a confirmation link. Verify your email to get started.",
         });
       }
     } catch (error: any) {
@@ -54,14 +55,31 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 gradient-hero items-center justify-center p-12">
-        <div className="max-w-md text-center">
+      <div className="hidden lg:flex lg:w-1/2 gradient-hero items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-15">
+          <img src={heroBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="absolute top-20 right-10 w-72 h-72 rounded-full bg-accent/10 blur-3xl animate-float" />
+        <div className="relative z-10 max-w-md text-center">
+          <div className="w-16 h-16 rounded-2xl gradient-accent flex items-center justify-center mx-auto mb-8">
+            <GraduationCap className="w-8 h-8 text-accent-foreground" />
+          </div>
           <h1 className="text-4xl font-display font-bold text-primary-foreground mb-4">
             Your Future Starts Here
           </h1>
           <p className="text-primary-foreground/70 text-lg leading-relaxed">
-            Get personalized academic pathways powered by AI. From high school to grad school — we help you plan every step.
+            Create your account, tell us about yourself, and get a personalized education & career roadmap powered by AI.
           </p>
+          <div className="mt-10 flex flex-col gap-3 text-left max-w-xs mx-auto">
+            {["Tell us who you are", "Pick your career interests", "Get your personalized path"].map((step, i) => (
+              <div key={step} className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+                  {i + 1}
+                </div>
+                <span className="text-primary-foreground/80 text-sm">{step}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -72,15 +90,17 @@ export default function AuthPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Link to="/" className="font-display text-2xl font-bold text-foreground tracking-tight inline-block mb-8">
+          <div className="font-display text-2xl font-bold text-foreground tracking-tight mb-8">
             Path<span className="text-primary">wise</span>
-          </Link>
+          </div>
 
           <h2 className="text-2xl font-display font-bold text-foreground mb-2">
             {isLogin ? "Welcome back" : "Create your account"}
           </h2>
           <p className="text-muted-foreground mb-8">
-            {isLogin ? "Sign in to continue your journey" : "Start planning your education path today"}
+            {isLogin
+              ? "Sign in to continue your journey"
+              : "It takes 2 minutes — then we'll build your path"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +134,7 @@ export default function AuthPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder="Password (min 6 characters)"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
@@ -133,7 +153,7 @@ export default function AuthPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full gradient-cta text-primary-foreground border-0 hover:opacity-90 py-3"
+              className="w-full gradient-cta text-primary-foreground border-0 hover:opacity-90 py-3 text-base"
             >
               {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
               <ArrowRight className="w-4 h-4 ml-2" />
