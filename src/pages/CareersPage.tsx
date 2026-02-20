@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase, TrendingUp, DollarSign, GraduationCap, ChevronDown, ChevronUp,
-  Sparkles, Zap, Shuffle, ArrowRight, Clock, X, Layers, BookOpen,
+  Sparkles, Zap, Shuffle, ArrowRight, Clock, X, Layers, BookOpen, Search,
+  Gem, Users,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UserProfile } from "@/lib/types";
 import { CareerRole, getCareersForProfile } from "@/lib/careerData";
 import { InterdisciplinaryRole, availableFields, getInterdisciplinaryRoles } from "@/lib/interdisciplinaryData";
@@ -25,6 +28,9 @@ const categoryConfig = {
   emerging: { label: "Emerging & Niche", icon: Sparkles, description: "Fast-growing roles at the frontier of industry — lesser-known but high potential." },
   hybrid: { label: "Hybrid & Non-Traditional", icon: Shuffle, description: "Roles that blend multiple disciplines. Great for interdisciplinary thinkers." },
 };
+
+// Mainstream roles = popular category
+const isMainstream = (role: CareerRole) => role.category === "popular";
 
 // ── Field Selector ──
 function FieldSelector({ selected, onChange }: { selected: string[]; onChange: (f: string[]) => void }) {
@@ -121,12 +127,10 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
           {expanded && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
               <div className="px-5 pb-5 space-y-4 border-t border-border/40 pt-4">
-                {/* Day-to-Day */}
                 <div>
                   <h4 className="section-label mb-2 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Day-to-Day</h4>
                   <p className="text-sm text-foreground/80 leading-relaxed">{role.dayToDay}</p>
                 </div>
-                {/* Recommended Majors */}
                 <div>
                   <h4 className="section-label mb-2 flex items-center gap-1.5"><BookOpen className="w-3 h-3" /> Recommended Majors</h4>
                   <div className="flex flex-wrap gap-2">
@@ -135,7 +139,6 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
                     ))}
                   </div>
                 </div>
-                {/* Skills */}
                 <div>
                   <h4 className="section-label mb-2 flex items-center gap-1.5"><Zap className="w-3 h-3" /> Key Skills</h4>
                   <div className="flex flex-wrap gap-2">
@@ -144,7 +147,6 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
                     ))}
                   </div>
                 </div>
-                {/* Fields */}
                 <div>
                   <h4 className="section-label mb-2">Fields Combined</h4>
                   <div className="flex flex-wrap gap-2">
@@ -153,7 +155,6 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
                     ))}
                   </div>
                 </div>
-                {/* Related Roles */}
                 <div>
                   <h4 className="section-label mb-2 flex items-center gap-1.5"><ArrowRight className="w-3 h-3" /> Related Roles</h4>
                   <div className="flex flex-wrap gap-2">
@@ -171,9 +172,36 @@ function InterdisciplinaryCard({ role }: { role: InterdisciplinaryRole }) {
   );
 }
 
-// ── Standard Role Card ──
-function RoleCard({ role }: { role: CareerRole }) {
+// ── Skills Roadmap Visual ──
+function SkillsRoadmap({ skills }: { skills: string[] }) {
+  const levels = ["Beginner", "Intermediate", "Advanced"];
+  const perLevel = Math.ceil(skills.length / 3);
+  return (
+    <div className="space-y-2">
+      {levels.map((level, li) => {
+        const levelSkills = skills.slice(li * perLevel, (li + 1) * perLevel);
+        if (levelSkills.length === 0) return null;
+        return (
+          <div key={level} className="flex items-start gap-3">
+            <span className={`text-[10px] font-semibold uppercase tracking-wider w-20 shrink-0 pt-1 ${
+              li === 0 ? "text-accent" : li === 1 ? "text-primary" : "text-destructive"
+            }`}>{level}</span>
+            <div className="flex flex-wrap gap-1.5">
+              {levelSkills.map(s => (
+                <Badge key={s} variant="secondary" className="text-xs font-normal">{s}</Badge>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Standard Role Card (Enhanced) ──
+function RoleCard({ role, userInterests }: { role: CareerRole; userInterests: string[] }) {
   const [expanded, setExpanded] = useState(false);
+  const mainstream = isMainstream(role);
 
   return (
     <Card className="premium-card-hover overflow-hidden">
@@ -186,6 +214,15 @@ function RoleCard({ role }: { role: CareerRole }) {
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-display font-semibold text-foreground">{role.title}</h3>
               <Badge variant="outline" className="text-[10px]">{role.field}</Badge>
+              {mainstream ? (
+                <Badge className="text-[9px] bg-muted text-muted-foreground border-border gap-0.5">
+                  <Users className="w-2.5 h-2.5" /> Mainstream
+                </Badge>
+              ) : (
+                <Badge className="text-[9px] bg-accent/10 text-accent border-accent/20 gap-0.5">
+                  <Gem className="w-2.5 h-2.5" /> Hidden Gem
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{role.description}</p>
             <div className="flex items-center gap-4 mt-3 flex-wrap">
@@ -214,17 +251,26 @@ function RoleCard({ role }: { role: CareerRole }) {
                   <p className="text-sm text-foreground/80 leading-relaxed">{role.dayToDay}</p>
                 </div>
                 <div>
-                  <h4 className="section-label mb-2 flex items-center gap-1.5"><Zap className="w-3 h-3" /> Key Skills</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {role.skills.map(s => <Badge key={s} variant="secondary" className="text-xs font-normal">{s}</Badge>)}
-                  </div>
+                  <h4 className="section-label mb-2 flex items-center gap-1.5"><Zap className="w-3 h-3" /> Skills Roadmap</h4>
+                  <SkillsRoadmap skills={role.skills} />
                 </div>
                 <div>
-                  <h4 className="section-label mb-2 flex items-center gap-1.5"><ArrowRight className="w-3 h-3" /> Related Roles</h4>
+                  <h4 className="section-label mb-2 flex items-center gap-1.5"><ArrowRight className="w-3 h-3" /> Alternative Paths</h4>
                   <div className="flex flex-wrap gap-2">
                     {role.relatedRoles.map(r => <span key={r} className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">{r}</span>)}
                   </div>
                 </div>
+                {/* Personalized note */}
+                {userInterests.length > 0 && (
+                  <div className="p-3 rounded-xl bg-primary/5 border border-primary/15">
+                    <p className="text-xs text-foreground flex items-start gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <span>
+                        <strong>Why this fits you:</strong> Your interest in {userInterests[0]} aligns well with {role.title}'s core skills. This could be a strong match for your profile.
+                      </span>
+                    </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -239,6 +285,8 @@ export default function CareersPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
   const [careers, setCareers] = useState<ReturnType<typeof getCareersForProfile> | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("popular");
 
   useEffect(() => {
     const p = getProfile();
@@ -246,7 +294,6 @@ export default function CareersPage() {
     setProfile(p);
     const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
     setCareers(getCareersForProfile(interests));
-    // Seed selected fields from profile
     const seedFields = interests
       .map(i => availableFields.find(f => f.toLowerCase().includes(i.toLowerCase().replace("software & tech", "computer science").replace("healthcare & medicine", "healthcare").replace("business & finance", "business").replace("creative & design", "design"))))
       .filter(Boolean) as string[];
@@ -258,23 +305,13 @@ export default function CareersPage() {
     [selectedFields]
   );
 
-  // Also update standard careers when fields change
   const dynamicCareers = useMemo(() => {
     if (selectedFields.length === 0 && careers) return careers;
-    // Map selected fields back to career data field names
     const fieldMap: Record<string, string> = {
-      "Computer Science": "Software & Tech",
-      "Business": "Business & Finance",
-      "Finance": "Business & Finance",
-      "Healthcare": "Healthcare & Medicine",
-      "Biology": "Healthcare & Medicine",
-      "Design": "Creative & Design",
-      "Art": "Creative & Design",
-      "Engineering": "Engineering",
-      "Education": "Education & Teaching",
-      "Law": "Law & Policy",
-      "Policy": "Law & Policy",
-      "Psychology": "Social Work & Counseling",
+      "Computer Science": "Software & Tech", "Business": "Business & Finance", "Finance": "Business & Finance",
+      "Healthcare": "Healthcare & Medicine", "Biology": "Healthcare & Medicine", "Design": "Creative & Design",
+      "Art": "Creative & Design", "Engineering": "Engineering", "Education": "Education & Teaching",
+      "Law": "Law & Policy", "Policy": "Law & Policy", "Psychology": "Social Work & Counseling",
     };
     const mappedInterests = selectedFields.map(f => fieldMap[f] || f).filter((v, i, a) => a.indexOf(v) === i);
     return getCareersForProfile(mappedInterests.length > 0 ? mappedInterests : ["Software & Tech"]);
@@ -282,11 +319,32 @@ export default function CareersPage() {
 
   if (!profile) return null;
 
-  const sections = [
-    { key: "popular" as const, ...categoryConfig.popular, roles: dynamicCareers?.popular || [] },
-    { key: "emerging" as const, ...categoryConfig.emerging, roles: dynamicCareers?.emerging || [] },
-    { key: "hybrid" as const, ...categoryConfig.hybrid, roles: dynamicCareers?.hybrid || [] },
-  ];
+  const userInterests = profile.careerInterests?.length > 0 ? profile.careerInterests : profile.interests;
+
+  // Filter by search
+  const filterRoles = (roles: CareerRole[]) => {
+    if (!searchQuery.trim()) return roles;
+    const q = searchQuery.toLowerCase();
+    return roles.filter(r =>
+      r.title.toLowerCase().includes(q) ||
+      r.field.toLowerCase().includes(q) ||
+      r.skills.some(s => s.toLowerCase().includes(q)) ||
+      r.description.toLowerCase().includes(q)
+    );
+  };
+
+  const sections = {
+    popular: filterRoles(dynamicCareers?.popular || []),
+    emerging: filterRoles(dynamicCareers?.emerging || []),
+    hybrid: filterRoles(dynamicCareers?.hybrid || []),
+  };
+
+  const filteredInterdisciplinary = searchQuery.trim()
+    ? interdisciplinaryRoles.filter(r =>
+        r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : interdisciplinaryRoles;
 
   return (
     <DashboardLayout>
@@ -298,26 +356,39 @@ export default function CareersPage() {
           </p>
         </motion.div>
 
+        {/* Search */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search careers by title, skill, or field..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-10 h-10 bg-card border-border/50"
+            />
+          </div>
+        </motion.div>
+
         {/* Multi-field selector */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <FieldSelector selected={selectedFields} onChange={setSelectedFields} />
         </motion.div>
 
         {/* Interdisciplinary Matches */}
-        {interdisciplinaryRoles.length > 0 && (
+        {filteredInterdisciplinary.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <div className="flex items-center gap-2 mb-4">
               <Layers className="w-4 h-4 text-primary" />
               <h2 className="text-sm font-display font-bold text-foreground uppercase tracking-wide">
                 Interdisciplinary Matches
               </h2>
-              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{interdisciplinaryRoles.length} roles</Badge>
+              <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">{filteredInterdisciplinary.length} roles</Badge>
             </div>
             <p className="text-xs text-muted-foreground mb-4 -mt-2">
               Unique roles that combine {selectedFields.join(" + ")} — these are where cross-field knowledge creates the most value.
             </p>
             <div className="space-y-3">
-              {interdisciplinaryRoles.map((role, i) => (
+              {filteredInterdisciplinary.map((role, i) => (
                 <motion.div key={role.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}>
                   <InterdisciplinaryCard role={role} />
                 </motion.div>
@@ -326,25 +397,41 @@ export default function CareersPage() {
           </motion.div>
         )}
 
-        {/* Standard career sections */}
-        {sections.map((section, si) => (
-          section.roles.length > 0 && (
-            <motion.div key={section.key} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (interdisciplinaryRoles.length > 0 ? 0.2 : 0.1) + si * 0.1 }}>
-              <div className="flex items-center gap-2 mb-4">
-                <section.icon className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-display font-bold text-foreground uppercase tracking-wide">{section.label}</h2>
-              </div>
-              <p className="text-xs text-muted-foreground mb-4 -mt-2">{section.description}</p>
-              <div className="space-y-3">
-                {section.roles.map((role, i) => (
-                  <motion.div key={role.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: si * 0.1 + i * 0.05 }}>
-                    <RoleCard role={role} />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )
-        ))}
+        {/* Tabbed career sections */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="w-full justify-start bg-muted/50 p-1 rounded-xl">
+              <TabsTrigger value="popular" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+                <Briefcase className="w-3.5 h-3.5" /> Popular
+                <Badge variant="secondary" className="text-[9px] ml-1">{sections.popular.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="emerging" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+                <Sparkles className="w-3.5 h-3.5" /> Emerging
+                <Badge variant="secondary" className="text-[9px] ml-1">{sections.emerging.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger value="hybrid" className="gap-1.5 text-xs data-[state=active]:shadow-sm rounded-lg">
+                <Shuffle className="w-3.5 h-3.5" /> Hybrid
+                <Badge variant="secondary" className="text-[9px] ml-1">{sections.hybrid.length}</Badge>
+              </TabsTrigger>
+            </TabsList>
+
+            {(["popular", "emerging", "hybrid"] as const).map(key => (
+              <TabsContent key={key} value={key} className="mt-4">
+                <p className="text-xs text-muted-foreground mb-4">{categoryConfig[key].description}</p>
+                <div className="space-y-3">
+                  {sections[key].map((role, i) => (
+                    <motion.div key={role.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                      <RoleCard role={role} userInterests={userInterests} />
+                    </motion.div>
+                  ))}
+                  {sections[key].length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">No careers match your search.</p>
+                  )}
+                </div>
+              </TabsContent>
+            ))}
+          </Tabs>
+        </motion.div>
       </div>
     </DashboardLayout>
   );
