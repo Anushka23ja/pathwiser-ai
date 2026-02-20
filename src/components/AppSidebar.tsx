@@ -6,6 +6,7 @@ import {
   Building2,
   Users,
   Bot,
+  Headphones,
   Settings,
   Target,
   Compass,
@@ -40,6 +41,7 @@ export function AppSidebar() {
 
   const toolItems = [
     { title: t("nav.aiAdvisor"), url: "/chat", icon: Bot },
+    { title: t("nav.voiceAdvisor"), url: "/voice", icon: Headphones },
     { title: t("nav.language"), url: "/settings#language", icon: Globe },
     { title: t("nav.settings"), url: "/settings", icon: Settings },
   ];
