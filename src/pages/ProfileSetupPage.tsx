@@ -60,16 +60,16 @@ const fallbackDetailOptions: Record<string, { label: string; description: string
 };
 
 const fallbackWhyOptions = [
-  "Explore career options",
-  "Switch major or career",
-  "Plan my next steps",
-  "Find better-paying paths",
+  "Explore career paths",
+  "Switch my major",
+  "Plan next steps",
+  "Find higher-paying roles",
   "Build a strong foundation",
   "Discover my passions",
-  "Prep for college admissions",
+  "Prep for college apps",
   "Try new activities",
-  "Understand how I learn",
-  "Prepare for future challenges",
+  "Understand my learning style",
+  "Prepare for challenges ahead",
 ];
 
 const fallbackCareerOptions = [
@@ -90,12 +90,14 @@ function getStageOptionsForLevel(level: string): StageOption[] {
   }
 }
 
-function ToggleChip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
+function ToggleChip({ label, selected, onClick, stacked }: { label: string; selected: boolean; onClick: () => void; stacked?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 border ${
+      className={`inline-flex items-center gap-1.5 px-3 py-2.5 sm:px-4 sm:py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${
+        stacked ? "w-full justify-start" : ""
+      } ${
         selected
           ? "bg-primary text-primary-foreground border-primary shadow-elevated"
           : "bg-card text-foreground border-border hover:border-primary/30 hover:bg-muted"
@@ -106,6 +108,8 @@ function ToggleChip({ label, selected, onClick }: { label: string; selected: boo
     </button>
   );
 }
+
+
 
 function DetailCard({ label, description, selected, onClick }: { label: string; description: string; selected: boolean; onClick: () => void }) {
   return (
@@ -521,22 +525,23 @@ export default function ProfileSetupPage() {
               {step === 3 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <Lightbulb className="w-7 h-7 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Why are you using Pathwise?</h2>
+                    <Lightbulb className="w-6 h-6 sm:w-7 sm:h-7 text-primary shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">Why are you using Pathwise?</h2>
                   </div>
-                  <p className="text-muted-foreground mb-2">Select all that apply — these were generated based on your situation.</p>
+                  <p className="text-muted-foreground text-sm mb-2">Select all that apply.</p>
                   {aiQuestions && (
                     <p className="text-xs text-accent mb-4 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Personalized by AI for your profile
+                      <Sparkles className="w-3 h-3" /> Personalized for your profile
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-col gap-2 sm:gap-2.5">
                     {whyOptions.map((opt) => (
                       <ToggleChip
                         key={opt}
                         label={opt}
                         selected={profile.whyUsing.includes(opt)}
                         onClick={() => setProfile({ ...profile, whyUsing: toggleArrayItem(profile.whyUsing, opt) })}
+                        stacked
                       />
                     ))}
                   </div>

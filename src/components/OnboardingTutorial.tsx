@@ -46,7 +46,10 @@ export default function OnboardingTutorial() {
 
   useEffect(() => {
     const done = localStorage.getItem(TUTORIAL_KEY);
-    if (!done) setVisible(true);
+    const profile = localStorage.getItem("pathwise-profile");
+    // Show tutorial for new users AND guests (anyone who hasn't completed it)
+    if (!done && profile) setVisible(true);
+    if (!done && !profile) setVisible(true);
   }, []);
 
   const finish = () => {
