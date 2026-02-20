@@ -25,7 +25,7 @@ export default function AuthPage() {
           password: form.password,
         });
         if (error) throw error;
-        navigate("/profile-setup");
+        navigate("/dashboard");
       } else {
         const { error } = await supabase.auth.signUp({
           email: form.email,
