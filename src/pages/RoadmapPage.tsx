@@ -134,7 +134,7 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
               key={action.id}
               onClick={() => onToggle(action.id)}
               whileTap={{ scale: 0.98 }}
-              className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border border-l-4 transition-all ${catColor} ${
+              className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border border-l-4 transition-all min-h-[44px] ${catColor} ${
                 isDone
                   ? "border-accent/20 bg-accent/5 opacity-70"
                   : action.urgent
@@ -186,7 +186,7 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
 
   return (
     <Card className="premium-card overflow-hidden">
-      <button className="w-full text-left p-5 flex items-start gap-4" onClick={() => setExpanded(!expanded)}>
+      <button className="w-full text-left p-4 sm:p-5 flex items-start gap-3 sm:gap-4" onClick={() => setExpanded(!expanded)}>
         <div className="w-11 h-11 rounded-xl gradient-cta flex items-center justify-center text-primary-foreground text-sm font-bold shrink-0">
           <Calendar className="w-5 h-5" />
         </div>
@@ -355,31 +355,33 @@ export default function RoadmapPage() {
     <DashboardLayout>
       <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight">Your Roadmap</h1>
-              {isAIGenerated && (
-                <Badge variant="secondary" className="text-[10px] gap-1">
-                  <Sparkles className="w-3 h-3" /> AI-Generated
-                </Badge>
-              )}
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <div className="flex items-start justify-between flex-wrap gap-3">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl sm:text-3xl font-display font-bold text-foreground tracking-tight">Your Roadmap</h1>
+                {isAIGenerated && (
+                  <Badge variant="secondary" className="text-[10px] gap-1">
+                    <Sparkles className="w-3 h-3" /> AI
+                  </Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground text-xs sm:text-sm">
+                Built for <span className="font-semibold text-foreground">{stageName}</span> · {totalDone}/{allActions.length} done
+                {totalUrgent > 0 && <span className="text-destructive font-semibold"> · {totalUrgent} urgent</span>}
+              </p>
             </div>
-            <p className="text-muted-foreground text-sm">
-              Built for <span className="font-semibold text-foreground">{stageName}</span> · {totalDone}/{allActions.length} actions completed
-              {totalUrgent > 0 && <span className="text-destructive font-semibold"> · {totalUrgent} urgent</span>}
-            </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={regenerateRoadmap} disabled={regenerating}>
-              {regenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+            <Button variant="outline" size="sm" onClick={regenerateRoadmap} disabled={regenerating} className="shrink-0 text-xs min-h-[44px]">
+              {regenerating ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
               {regenerating ? "Regenerating..." : "Regenerate"}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/profile-setup")}>
-              <RotateCcw className="w-4 h-4 mr-2" />Update Profile
+            <Button variant="outline" size="sm" onClick={() => navigate("/profile-setup")} className="shrink-0 text-xs min-h-[44px]">
+              <RotateCcw className="w-4 h-4 mr-1.5" />Update Profile
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Download className="w-4 h-4 mr-2" />Export
+            <Button variant="outline" size="sm" onClick={handleSave} className="shrink-0 text-xs min-h-[44px]">
+              <Download className="w-4 h-4 mr-1.5" />Export
             </Button>
           </div>
         </motion.div>
@@ -401,7 +403,7 @@ export default function RoadmapPage() {
         {/* Category Color Legend */}
         {usedCategories.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
               {usedCategories.map(cat => (
                 <div key={cat} className="flex items-center gap-1.5">
                   <div className={`w-3 h-1 rounded-full ${categoryColorsBg[cat] || "bg-border"}`} />

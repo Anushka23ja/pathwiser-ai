@@ -120,17 +120,17 @@ export default function DashboardPage() {
       <div className="p-4 sm:p-8 max-w-6xl mx-auto space-y-10">
         {/* Hero Greeting with frosted gradient */}
         <motion.div initial="hidden" animate="visible" variants={fade} custom={0}>
-          <div className="relative overflow-hidden rounded-2xl p-6 sm:p-8" style={{ background: "var(--gradient-hero)" }}>
+          <div className="relative overflow-hidden rounded-2xl p-4 sm:p-8" style={{ background: "var(--gradient-hero)" }}>
             <div className="absolute inset-0 bg-background/5 backdrop-blur-[2px]" />
-            <div className="relative flex items-start gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
-                <Sparkles className="w-7 h-7 text-white" />
+            <div className="relative flex items-start gap-3 sm:gap-5">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/20">
+                <Sparkles className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-tight">
+                <h1 className="text-xl sm:text-3xl font-display font-bold text-white tracking-tight">
                   {getGreeting()}
                 </h1>
-                <p className="text-white/70 text-sm mt-1.5 leading-relaxed max-w-xl">
+                <p className="text-white/70 text-xs sm:text-sm mt-1 sm:mt-1.5 leading-relaxed max-w-xl">
                   {profile.educationLevel} · {t("dashboard.focusedOn")} {interests.join(", ")}
                 </p>
               </div>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
         <motion.div initial="hidden" animate="visible" variants={fade} custom={0.5}>
           <Card className="border-none shadow-[var(--shadow-soft)] overflow-hidden">
             <CardContent className="p-0">
-              <div className="flex items-center gap-6 p-5 sm:p-6">
+              <div className="flex items-center gap-4 sm:gap-6 p-4 sm:p-6">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-3">
                     <span className="section-label">{t("dashboard.yourJourney")}</span>
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                               ? "bg-primary border-primary"
                               : "bg-muted border-border"
                           } ${i === currentMilestoneIdx ? "animate-pulse-soft ring-2 ring-primary/20" : ""}`} />
-                          <span className={`text-[9px] mt-1 font-medium ${i <= currentMilestoneIdx ? "text-primary" : "text-muted-foreground"}`}>
+                          <span className={`text-[9px] mt-1 font-medium hidden sm:inline ${i <= currentMilestoneIdx ? "text-primary" : "text-muted-foreground"}`}>
                             {m.label}
                           </span>
                         </div>
@@ -191,8 +191,11 @@ export default function DashboardPage() {
                     <span>{t("dashboard.tasksDone", { count: doneTasks })}</span>
                     <span>{t("dashboard.activeGoals", { count: activeGoals.length })}</span>
                   </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/actions")} className="shrink-0 text-xs mt-3 sm:hidden w-full">
+                    {t("nav.actionCenter")} <ChevronRight className="w-3 h-3 ml-1" />
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => navigate("/actions")} className="shrink-0 text-xs">
+                <Button variant="outline" size="sm" onClick={() => navigate("/actions")} className="shrink-0 text-xs hidden sm:flex">
                   {t("nav.actionCenter")} <ChevronRight className="w-3 h-3 ml-1" />
                 </Button>
               </div>
@@ -213,7 +216,7 @@ export default function DashboardPage() {
                 className={`card-glow cursor-pointer group border-l-4 ${item.color}`}
                 onClick={() => navigate(item.path)}
               >
-                <CardContent className="p-5">
+                <CardContent className="p-4 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="w-6 h-6 rounded-full gradient-cta flex items-center justify-center text-[10px] font-bold text-white">
                       {item.priority}
