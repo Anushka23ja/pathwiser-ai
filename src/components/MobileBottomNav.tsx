@@ -23,6 +23,7 @@ export default function MobileBottomNav() {
             <button
               key={tab.path}
               onClick={() => navigate(tab.path)}
+              data-tutorial={tab.label.toLowerCase()}
               className={cn(
                 "flex flex-col items-center justify-center gap-0.5 flex-1 h-full min-w-0 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground"
