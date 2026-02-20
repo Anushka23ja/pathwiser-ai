@@ -147,6 +147,7 @@ function MonthBlock({ month, actions, onToggle, completedIds, deadlines, onSetDe
   deadlines: Record<string, string>;
   onSetDeadline: (id: string, date: Date | undefined) => void;
 }) {
+  const isMobile = useIsMobile();
   const done = actions.filter(a => completedIds.has(a.id)).length;
   const isCurrentMonth = month.toLowerCase().includes(currentMonthName.toLowerCase());
 
@@ -186,7 +187,7 @@ function MonthBlock({ month, actions, onToggle, completedIds, deadlines, onSetDe
                 <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
                   {action.title}
                 </p>
-                <MobileTruncatedText text={action.description} className="text-xs text-muted-foreground mt-0.5" />
+                {!isMobile && <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>}
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
                     <Clock className="w-3 h-3" />
