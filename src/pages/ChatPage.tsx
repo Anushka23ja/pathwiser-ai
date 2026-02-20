@@ -4,7 +4,10 @@ import { motion } from "framer-motion";
 import { Send, Bot, User, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ChatMessage } from "@/lib/types";
-import { generateChatResponse } from "@/lib/placeholderData";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const suggestions = [
   "Should I do Running Start?",
@@ -13,36 +16,148 @@ const suggestions = [
   "Is a master's degree worth it?",
 ];
 
+function getUserProfile() {
+  try {
+    const stored = localStorage.getItem("pathwise-profile");
+    if (!stored) return null;
+    return JSON.parse(stored);
+  } catch {
+    return null;
+  }
+}
+
 export default function ChatPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
       role: "assistant",
-      content: "Hi! I'm your Pathwise AI Advisor. Ask me anything about education paths, majors, career planning, or academic strategies. What's on your mind?",
+      content: "Hi! I'm your Pathwise AI Advisor. Ask me anything about education paths, majors, career planning, or academic strategies. I've got your profile loaded, so my advice will be tailored to you!",
     },
   ]);
   const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isStreaming) return;
+
     const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: text.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setIsTyping(true);
+    setIsStreaming(true);
 
-    setTimeout(() => {
-      const response = generateChatResponse(text);
-      const botMsg: ChatMessage = { id: (Date.now() + 1).toString(), role: "assistant", content: response };
-      setMessages((prev) => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 1200);
+    const profile = getUserProfile();
+    const apiMessages = [...messages.filter(m => m.id !== "welcome"), userMsg].map(m => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    let assistantSoFar = "";
+    const assistantId = (Date.now() + 1).toString();
+
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: apiMessages,
+          userProfile: profile ? {
+            educationLevel: profile.educationLevel,
+            levelDetails: profile.favoriteSubjects,
+            careerInterests: profile.careerInterests || profile.interests,
+            whyUsing: profile.longTermGoals,
+            schoolName: profile.schoolName,
+          } : null,
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Request failed" }));
+        toast({ title: "AI Error", description: err.error || "Something went wrong", variant: "destructive" });
+        setIsStreaming(false);
+        return;
+      }
+
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+
+      // Add empty assistant message
+      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantSoFar += content;
+              const updated = assistantSoFar;
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantId ? { ...m, content: updated } : m))
+              );
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Final flush
+      if (textBuffer.trim()) {
+        for (let raw of textBuffer.split("\n")) {
+          if (!raw) continue;
+          if (raw.endsWith("\r")) raw = raw.slice(0, -1);
+          if (raw.startsWith(":") || raw.trim() === "") continue;
+          if (!raw.startsWith("data: ")) continue;
+          const jsonStr = raw.slice(6).trim();
+          if (jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantSoFar += content;
+              const updated = assistantSoFar;
+              setMessages((prev) =>
+                prev.map((m) => (m.id === assistantId ? { ...m, content: updated } : m))
+              );
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    } catch (e) {
+      console.error("Stream error:", e);
+      toast({ title: "Connection Error", description: "Failed to reach AI advisor. Please try again.", variant: "destructive" });
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   return (
@@ -50,7 +165,7 @@ export default function ChatPage() {
       <nav className="border-b border-border px-6 py-4 shrink-0">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/roadmap")} className="text-muted-foreground hover:text-foreground">
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <span className="font-display text-xl font-bold text-foreground tracking-tight">
@@ -80,7 +195,7 @@ export default function ChatPage() {
                   <User className="w-4 h-4 text-muted-foreground" />
                 )}
               </div>
-              <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+              <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === "assistant"
                   ? "glass-card text-foreground"
                   : "bg-primary text-primary-foreground"
@@ -90,7 +205,7 @@ export default function ChatPage() {
             </motion.div>
           ))}
 
-          {isTyping && (
+          {isStreaming && messages[messages.length - 1]?.role !== "assistant" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
               <div className="w-8 h-8 rounded-full gradient-cta flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 text-primary-foreground" />
@@ -144,7 +259,7 @@ export default function ChatPage() {
             />
             <Button
               type="submit"
-              disabled={!input.trim() || isTyping}
+              disabled={!input.trim() || isStreaming}
               className="gradient-cta text-primary-foreground border-0 hover:opacity-90 px-4"
             >
               <Send className="w-4 h-4" />
