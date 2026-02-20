@@ -21,19 +21,19 @@ const levelCards = [
     value: "High School",
     icon: GraduationCap,
     title: "High School Student",
-    description: "I'm in high school exploring what comes next — college, trade school, or other paths.",
+    description: "Exploring what comes next",
   },
   {
     value: "College",
     icon: Building2,
     title: "College Student",
-    description: "I'm currently enrolled in college (community college, university, or Running Start).",
+    description: "Currently enrolled in college",
   },
   {
     value: "Professional",
     icon: Briefcase,
     title: "Working Professional",
-    description: "I'm already working and looking to advance, switch careers, or go back to school.",
+    description: "Advancing or switching careers",
   },
 ];
 
@@ -59,25 +59,58 @@ const fallbackDetailOptions: Record<string, { label: string; description: string
   ],
 };
 
-const fallbackWhyOptions = [
-  "Explore career paths",
-  "Switch my major",
-  "Plan next steps",
-  "Find higher-paying roles",
-  "Build a strong foundation",
-  "Discover my passions",
-  "Prep for college apps",
-  "Try new activities",
-  "Understand my learning style",
-  "Prepare for challenges ahead",
-];
+const fallbackWhyByLevel: Record<string, string[]> = {
+  "High School": [
+    "Explore career options",
+    "Prep for college apps",
+    "Find scholarships",
+    "Build my resume early",
+    "Discover my strengths",
+    "Plan extracurriculars",
+    "Learn about trade paths",
+    "Get ahead academically",
+  ],
+  "College": [
+    "Choose the right major",
+    "Land internships",
+    "Prep for grad school",
+    "Build professional network",
+    "Explore career pivots",
+    "Improve my GPA strategy",
+    "Find research opportunities",
+    "Plan post-graduation life",
+  ],
+  "Professional": [
+    "Switch careers entirely",
+    "Earn new certifications",
+    "Move into leadership",
+    "Start a side business",
+    "Negotiate higher salary",
+    "Find mentorship opportunities",
+    "Go back to school",
+    "Build a personal brand",
+  ],
+};
 
-const fallbackCareerOptions = [
-  "Software & Tech", "Healthcare & Medicine", "Business & Finance", "Engineering",
-  "Education & Teaching", "Creative & Design", "Law & Policy", "Science & Research",
-  "Trades & Skilled Labor", "Media & Communications", "Psychology & Counseling",
-  "Government & Public Service", "Environmental Science", "Data & Analytics",
-];
+const fallbackCareersByLevel: Record<string, string[]> = {
+  "High School": [
+    "Software & Tech", "Healthcare", "Engineering", "Creative & Design",
+    "Business", "Trades & Skilled Labor", "Science & Research", "Education",
+    "Media & Film", "Law & Government", "Environmental Science", "Psychology",
+  ],
+  "College": [
+    "Software Engineering", "Data Science", "Healthcare & Medicine", "Finance & Consulting",
+    "Engineering", "UX/Product Design", "Research & Academia", "Marketing & Media",
+    "Law", "Education", "Environmental Science", "Psychology & Counseling",
+    "Government & Policy", "Entrepreneurship",
+  ],
+  "Professional": [
+    "Tech & Software", "Product Management", "Data & Analytics", "Healthcare Leadership",
+    "Finance & Investing", "Consulting", "Entrepreneurship", "Creative Direction",
+    "Education & Training", "Legal", "Government & Public Service", "Trades & Skilled Labor",
+    "Nonprofit & Social Impact", "Media & Communications",
+  ],
+};
 
 function getStageOptionsForLevel(level: string): StageOption[] {
   switch (level) {
@@ -325,18 +358,18 @@ export default function ProfileSetupPage() {
 
   // Use AI questions or fallbacks
   const detailOptions = aiQuestions?.situationOptions || fallbackDetailOptions[profile.educationLevel] || [];
-  const whyOptions = aiQuestions?.whyOptions || fallbackWhyOptions;
-  const careerOptions = aiQuestions?.careerOptions || fallbackCareerOptions;
+  const whyOptions = aiQuestions?.whyOptions || fallbackWhyByLevel[profile.educationLevel] || fallbackWhyByLevel["High School"];
+  const careerOptions = aiQuestions?.careerOptions || fallbackCareersByLevel[profile.educationLevel] || fallbackCareersByLevel["High School"];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <nav className="border-b border-border px-6 py-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <span className="font-display text-xl font-bold text-foreground tracking-tight">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      <nav className="border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between">
+          <span className="font-display text-lg font-bold text-foreground tracking-tight">
             Path<span className="text-primary">wise</span>
           </span>
-          <span className="text-sm text-muted-foreground">
-            Step {step + 1} of {steps.length}
+          <span className="text-xs text-muted-foreground">
+            {step + 1} / {steps.length}
           </span>
         </div>
       </nav>
@@ -350,8 +383,8 @@ export default function ProfileSetupPage() {
         />
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 py-6 sm:py-12 overflow-y-auto">
-        <div className="w-full max-w-2xl">
+      <div className="flex-1 flex flex-col justify-center px-4 py-4 sm:px-6 sm:py-8 overflow-y-auto">
+        <div className="w-full max-w-lg mx-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -363,34 +396,34 @@ export default function ProfileSetupPage() {
               {/* Step 1: Education Level */}
               {step === 0 && (
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">Which best describes you?</h2>
-                  <p className="text-muted-foreground mb-8">Pick one so we can personalize your experience.</p>
+                  <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-1">Which describes you?</h2>
+                  <p className="text-muted-foreground text-sm mb-5">Pick one to personalize your experience.</p>
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {levelCards.map((card) => (
                       <button
                         key={card.value}
                         type="button"
                         onClick={() => setProfile({ ...profile, educationLevel: card.value, levelDetails: [], stage: "", whyUsing: [], careerInterests: [] })}
-                        className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 ${
+                        className={`flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all duration-200 ${
                           profile.educationLevel === card.value
                             ? "border-primary bg-primary/5 shadow-elevated"
                             : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"
                         }`}
                       >
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                           profile.educationLevel === card.value ? "gradient-cta" : "bg-muted"
                         }`}>
-                          <card.icon className={`w-6 h-6 ${
+                          <card.icon className={`w-5 h-5 ${
                             profile.educationLevel === card.value ? "text-primary-foreground" : "text-muted-foreground"
                           }`} />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-display font-semibold text-foreground">{card.title}</h3>
-                            {profile.educationLevel === card.value && <CheckCircle2 className="w-5 h-5 text-primary" />}
+                            <h3 className="font-display font-semibold text-foreground text-sm">{card.title}</h3>
+                            {profile.educationLevel === card.value && <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />}
                           </div>
-                          <p className="text-muted-foreground text-sm mt-1">{card.description}</p>
+                          <p className="text-muted-foreground text-xs">{card.description}</p>
                         </div>
                       </button>
                     ))}
@@ -420,13 +453,13 @@ export default function ProfileSetupPage() {
               {/* Step 2: Specific Stage */}
               {step === 1 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <MapPin className="w-7 h-7 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Where exactly are you right now?</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="w-5 h-5 text-primary shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">Where are you now?</h2>
                   </div>
-                  <p className="text-muted-foreground mb-8">This determines your personalized roadmap — we'll build time-sensitive milestones starting from this point.</p>
+                  <p className="text-muted-foreground text-sm mb-5">We'll build milestones from this point.</p>
 
-                  <div className="grid gap-3">
+                  <div className="grid gap-2.5">
                     {availableStages.map((stage) => (
                       <StageCard
                         key={stage.id}
@@ -489,27 +522,27 @@ export default function ProfileSetupPage() {
               {/* Step 3: AI-generated situation options */}
               {step === 2 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Sparkles className="w-7 h-7 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
-                      {profile.educationLevel === "High School" ? "Tell us more about your path"
-                        : profile.educationLevel === "College" ? "Where are you in your journey?"
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="w-5 h-5 text-primary shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">
+                      {profile.educationLevel === "High School" ? "Tell us about your path"
+                        : profile.educationLevel === "College" ? "Where in your journey?"
                         : "What are you looking for?"}
                     </h2>
                   </div>
-                  <p className="text-muted-foreground mb-2">Select all that apply — these options were tailored by AI based on your stage.</p>
+                  <p className="text-muted-foreground text-sm mb-2">Select all that apply.</p>
                   {loadingAI && (
-                    <div className="flex items-center gap-2 text-primary text-sm mb-4">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                    <div className="flex items-center gap-2 text-primary text-xs mb-3">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       <span>AI is personalizing your options...</span>
                     </div>
                   )}
                   {!loadingAI && aiQuestions && (
-                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Personalized by AI for your profile
+                    <p className="text-xs text-accent mb-3 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Personalized by AI
                     </p>
                   )}
-                  <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="grid gap-2.5">
                     {detailOptions.map((opt) => (
                       <DetailCard
                         key={opt.label}
@@ -526,17 +559,17 @@ export default function ProfileSetupPage() {
               {/* Step 4: AI-generated why options */}
               {step === 3 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Lightbulb className="w-6 h-6 sm:w-7 sm:h-7 text-primary shrink-0" />
-                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">Why are you using Pathwise?</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Lightbulb className="w-5 h-5 text-primary shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">Why use Pathwise?</h2>
                   </div>
                   <p className="text-muted-foreground text-sm mb-2">Select all that apply.</p>
                   {aiQuestions && (
-                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Personalized for your profile
+                    <p className="text-xs text-accent mb-3 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Personalized for you
                     </p>
                   )}
-                  <div className="flex flex-col gap-2 sm:gap-2.5">
+                  <div className="flex flex-col gap-2">
                     {whyOptions.map((opt) => (
                       <ToggleChip
                         key={opt}
@@ -553,17 +586,17 @@ export default function ProfileSetupPage() {
               {/* Step 5: AI-generated career options */}
               {step === 4 && (
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <Target className="w-7 h-7 text-primary" />
-                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Careers you want to explore</h2>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Target className="w-5 h-5 text-primary shrink-0" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground">Careers to explore</h2>
                   </div>
-                  <p className="text-muted-foreground mb-2">Pick the fields you're curious about — AI will build your roadmap around these.</p>
+                  <p className="text-muted-foreground text-sm mb-2">Pick fields you're curious about.</p>
                   {aiQuestions && (
-                    <p className="text-xs text-accent mb-4 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Curated by AI based on your answers
+                    <p className="text-xs text-accent mb-3 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> Curated for your answers
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2">
                     {careerOptions.map((opt) => (
                       <ToggleChip
                         key={opt}
@@ -578,7 +611,7 @@ export default function ProfileSetupPage() {
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex justify-between items-center mt-12">
+          <div className="flex justify-between items-center mt-6 sm:mt-10 pb-4">
             <Button
               variant="outline"
               onClick={() => (step > 0 ? setStep(step - 1) : null)}
