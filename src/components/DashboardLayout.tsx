@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { LogOut, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import OnboardingTutorial from "@/components/OnboardingTutorial";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, signOut } = useAuth();
@@ -58,6 +59,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </div>
       <MobileBottomNav />
+      <OnboardingTutorial />
     </SidebarProvider>
   );
 }
