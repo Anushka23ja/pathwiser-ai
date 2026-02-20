@@ -7,6 +7,7 @@ import {
   Users,
   Bot,
   Settings,
+  Target,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -22,6 +23,7 @@ import {
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Action Center", url: "/actions", icon: Target },
   { title: "My Roadmap", url: "/roadmap", icon: Map },
   { title: "Schools", url: "/schools", icon: GraduationCap },
   { title: "Careers", url: "/careers", icon: Briefcase },

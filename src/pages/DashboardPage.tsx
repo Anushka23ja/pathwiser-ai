@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   GraduationCap, Briefcase, TrendingUp, ArrowRight, Map, Building2,
-  Users, Bot, Award, Target, BookOpen, ChevronRight,
+  Users, Bot, Award, Target, BookOpen, ChevronRight, Sparkles, CheckCircle2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { UserProfile, RoadmapData } from "@/lib/types";
 import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
 import { getSchoolsForProfile, getCompaniesForProfile } from "@/lib/mockData";
+import { useGoals } from "@/hooks/useGoals";
 import DashboardLayout from "@/components/DashboardLayout";
 
 function getProfile(): UserProfile | null {
@@ -23,18 +25,25 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
+  const { goals, tasks, fetchGoals } = useGoals();
 
   useEffect(() => {
     const p = getProfile();
     if (!p) { navigate("/profile-setup"); return; }
     setProfile(p);
     setRoadmap(generatePlaceholderRoadmap(p));
-  }, [navigate]);
+    fetchGoals();
+  }, [navigate, fetchGoals]);
 
   if (!profile || !roadmap) return null;
 
   const schools = getSchoolsForProfile(profile).slice(0, 3);
   const companies = getCompaniesForProfile(profile).slice(0, 3);
+  const activeGoals = goals.filter(g => g.status === "active");
+  const totalTasks = tasks.length;
+  const doneTasks = tasks.filter(t => t.status === "done").length;
+  const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const upcomingTasks = tasks.filter(t => t.status !== "done" && t.status !== "skipped").slice(0, 4);
 
   const fadeUp = {
     hidden: { opacity: 0, y: 16 },
@@ -69,8 +78,8 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "My Roadmap", icon: Map, path: "/roadmap", color: "text-primary" },
-            { label: "Schools", icon: GraduationCap, path: "/schools", color: "text-accent" },
+            { label: "Action Center", icon: Target, path: "/actions", color: "text-primary" },
+            { label: "My Roadmap", icon: Map, path: "/roadmap", color: "text-accent" },
             { label: "Companies", icon: Building2, path: "/companies", color: "text-secondary" },
             { label: "AI Advisor", icon: Bot, path: "/chat", color: "text-primary" },
           ].map((item) => (
@@ -86,6 +95,42 @@ export default function DashboardPage() {
             </Card>
           ))}
         </motion.div>
+
+        {/* Goal Progress Widget */}
+        {(activeGoals.length > 0 || upcomingTasks.length > 0) && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1.5}>
+            <Card className="border-border/50 cursor-pointer hover:shadow-[var(--shadow-elevated)] transition-shadow" onClick={() => navigate("/actions")}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    Goal Progress
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                    Action Center <ChevronRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3 mb-3">
+                  <Progress value={overallProgress} className="flex-1 h-2" />
+                  <span className="text-sm font-bold text-primary">{overallProgress}%</span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">{doneTasks}/{totalTasks} tasks done • {activeGoals.length} active goal{activeGoals.length !== 1 ? "s" : ""}</p>
+                {upcomingTasks.length > 0 && (
+                  <div className="space-y-1.5">
+                    {upcomingTasks.map(t => (
+                      <div key={t.id} className="flex items-center gap-2 text-xs">
+                        <CheckCircle2 className="w-3 h-3 text-muted-foreground shrink-0" />
+                        <span className="text-foreground/80 truncate">{t.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Recommended Pathway */}

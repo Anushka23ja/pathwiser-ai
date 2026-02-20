@@ -1,19 +1,22 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Sparkles, Target, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { ChatMessage } from "@/lib/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useGoals } from "@/hooks/useGoals";
 import { toast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/DashboardLayout";
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const suggestions = [
-  "Should I do Running Start?",
-  "What major fits psychology and business?",
-  "How do I prepare for medical school?",
-  "Is a master's degree worth it?",
+  "Create a plan to become a Software Engineer",
+  "I want to switch from pre-med to business",
+  "What should I focus on this semester?",
+  "Help me prepare for medical school",
 ];
 
 function getUserProfile() {
@@ -24,9 +27,11 @@ function getUserProfile() {
 }
 
 export default function ChatPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const { generatePlan, pivotPlan, agentWorking } = useGoals();
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: "welcome", role: "assistant", content: "Hi! I'm your Pathwise AI Advisor. Ask me anything about education paths, majors, career planning, or academic strategies. I've got your profile loaded, so my advice will be tailored to you!" },
+    { id: "welcome", role: "assistant", content: "Hi! I'm your Pathwise AI Advisor. I can do more than just answer questions — I can **generate career plans**, **create task lists**, and **update your roadmap**.\n\nTry saying:\n• \"Create a plan to become a Software Engineer\"\n• \"I want to switch from pre-med to business\"\n• \"What should I focus on this semester?\"\n\nI'll analyze your profile and create actionable plans you can track in the Action Center." },
   ]);
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -36,17 +41,68 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const detectAgentCommand = (text: string): { type: string; params: any } | null => {
+    const lower = text.toLowerCase();
+    // Detect plan generation
+    const planPatterns = [/create a plan (?:to |for )(.+)/i, /plan to (.+)/i, /become (?:a |an )(.+)/i, /i want to be (?:a |an )(.+)/i, /help me become (.+)/i, /generate (?:a )?plan (?:for |to )(.+)/i];
+    for (const pattern of planPatterns) {
+      const match = text.match(pattern);
+      if (match) return { type: "generate_plan", params: { goalTitle: match[1].trim() } };
+    }
+    // Detect pivot
+    const pivotPatterns = [/switch (?:from )(.+?) to (.+)/i, /pivot (?:from )(.+?) to (.+)/i, /change (?:from )(.+?) to (.+)/i, /transition (?:from )(.+?) to (.+)/i];
+    for (const pattern of pivotPatterns) {
+      const match = text.match(pattern);
+      if (match) return { type: "pivot", params: { fromPath: match[1].trim(), toPath: match[2].trim() } };
+    }
+    return null;
+  };
+
   const sendMessage = async (text: string) => {
-    if (!text.trim() || isStreaming) return;
+    if (!text.trim() || isStreaming || agentWorking) return;
     const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: text.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+
+    // Check for agent commands first
+    const command = detectAgentCommand(text);
+    if (command) {
+      const agentMsgId = (Date.now() + 1).toString();
+      setMessages(prev => [...prev, { id: agentMsgId, role: "assistant", content: "🤖 **Agent Mode Activated** — Analyzing your profile and generating a structured plan..." }]);
+
+      if (command.type === "generate_plan") {
+        const plan = await generatePlan(command.params.goalTitle);
+        if (plan) {
+          const taskCount = plan.milestones.reduce((acc: number, m: any) => acc + m.tasks.length, 0);
+          setMessages(prev => prev.map(m => m.id === agentMsgId ? {
+            ...m,
+            content: `✅ **Plan Created: ${plan.goal.title}**\n\n${plan.summary}\n\n**${plan.milestones.length} milestones** with **${taskCount} tasks** have been added to your Action Center.\n\n📋 [Go to Action Center →](/actions) to track your progress and mark tasks as complete.`
+          } : m));
+        } else {
+          setMessages(prev => prev.map(m => m.id === agentMsgId ? { ...m, content: "❌ Failed to generate plan. Please try again." } : m));
+        }
+      } else if (command.type === "pivot") {
+        const pivot = await pivotPlan(command.params.fromPath, command.params.toPath);
+        if (pivot) {
+          setMessages(prev => prev.map(m => m.id === agentMsgId ? {
+            ...m,
+            content: `🔄 **Career Pivot Complete**\n\n**New Goal:** ${pivot.updatedGoal.title}\n\n${pivot.transitionAdvice}\n\n**Updated Focus:**\n• Schools: ${pivot.updatedSchoolFocus?.join(", ") || "General"}\n• Companies: ${pivot.updatedCompanyFocus?.join(", ") || "General"}\n\nYour old plan has been archived and new tasks are in the [Action Center →](/actions).`
+          } : m));
+        } else {
+          setMessages(prev => prev.map(m => m.id === agentMsgId ? { ...m, content: "❌ Failed to pivot plan. Please try again." } : m));
+        }
+      }
+      return;
+    }
+
+    // Regular chat flow
     setIsStreaming(true);
 
     const profile = getUserProfile();
     const apiMessages = [...messages.filter(m => m.id !== "welcome"), userMsg].map(m => ({ role: m.role, content: m.content }));
     let assistantSoFar = "";
     const assistantId = (Date.now() + 1).toString();
+
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -134,8 +190,17 @@ export default function ChatPage() {
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === "assistant" ? "gradient-cta" : "bg-muted"}`}>
                   {msg.role === "assistant" ? <Bot className="w-4 h-4 text-primary-foreground" /> : <User className="w-4 h-4 text-muted-foreground" />}
                 </div>
-                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "assistant" ? "bg-card border border-border/50 text-foreground" : "bg-primary text-primary-foreground"}`}>
-                  {msg.content}
+                <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card border border-border/50 text-foreground prose prose-sm max-w-none" : "bg-primary text-primary-foreground whitespace-pre-wrap"}`}>
+                  {msg.role === "assistant" ? (
+                    <ReactMarkdown components={{
+                      a: ({ href, children }) => {
+                        if (href?.startsWith("/")) {
+                          return <button onClick={() => navigate(href)} className="text-primary underline font-medium">{children}</button>;
+                        }
+                        return <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline">{children}</a>;
+                      }
+                    }}>{msg.content}</ReactMarkdown>
+                  ) : msg.content}
                 </div>
               </motion.div>
             ))}
@@ -178,11 +243,11 @@ export default function ChatPage() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about majors, careers, schools..."
+                placeholder={agentWorking ? "Agent is working..." : "Ask anything or give a command like 'Create a plan to...'"}
                 className="flex-1 px-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all text-sm"
               />
-              <Button type="submit" disabled={!input.trim() || isStreaming} className="gradient-cta text-primary-foreground border-0 hover:opacity-90 px-4">
-                <Send className="w-4 h-4" />
+              <Button type="submit" disabled={!input.trim() || isStreaming || agentWorking} className="gradient-cta text-primary-foreground border-0 hover:opacity-90 px-4">
+                {agentWorking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
             </form>
           </div>
