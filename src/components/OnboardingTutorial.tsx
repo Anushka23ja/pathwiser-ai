@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Map, Bot, Briefcase, Compass, X, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,6 @@ interface TutorialStep {
   title: string;
   description: string;
   color: string;
-  /** data-tutorial value to spotlight. null = centered (no spotlight) */
   selector: string | null;
 }
 
@@ -63,7 +62,6 @@ export default function OnboardingTutorial() {
   const [step, setStep] = useState(0);
   const [visible, setVisible] = useState(false);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
-  const rafRef = useRef<number>();
 
   useEffect(() => {
     const done = localStorage.getItem(TUTORIAL_KEY);
@@ -87,22 +85,12 @@ export default function OnboardingTutorial() {
     }
   }, []);
 
-  // Re-measure on step change and on scroll/resize
   useEffect(() => {
     if (!visible) return;
     const current = steps[step];
     measureTarget(current.selector);
-
-    const update = () => {
-      measureTarget(current.selector);
-      rafRef.current = requestAnimationFrame(update);
-    };
-    // Use a simpler interval approach for re-measuring
-    const interval = setInterval(() => measureTarget(current.selector), 200);
-    return () => {
-      clearInterval(interval);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
+    const interval = setInterval(() => measureTarget(current.selector), 250);
+    return () => clearInterval(interval);
   }, [step, visible, measureTarget]);
 
   const finish = () => {
@@ -126,34 +114,6 @@ export default function OnboardingTutorial() {
   const isLast = step === steps.length - 1;
   const hasTarget = !!targetRect;
 
-  // Calculate tooltip position
-  const getTooltipPosition = (): React.CSSProperties => {
-    if (!targetRect) return {};
-
-    const isMobile = window.innerWidth < 640;
-    const padding = 12;
-
-    if (isMobile) {
-      // On mobile, position the card above the bottom nav
-      // The target is in the bottom nav, so place tooltip above it
-      return {
-        position: "fixed",
-        bottom: `${window.innerHeight - targetRect.top + padding}px`,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
-    }
-
-    // On desktop, position to the right of the sidebar item
-    return {
-      position: "fixed",
-      top: `${targetRect.top + targetRect.height / 2}px`,
-      left: `${targetRect.left + targetRect.width + padding}px`,
-      transform: "translateY(-50%)",
-    };
-  };
-
-  // SVG spotlight overlay
   const spotlightPadding = 6;
   const spotlightRadius = 10;
 
@@ -202,41 +162,76 @@ export default function OnboardingTutorial() {
         />
       )}
 
-      {/* Tooltip card */}
+      {/* Tooltip card — on mobile: always centered above bottom nav; on desktop: beside target */}
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
-          initial={{ opacity: 0, y: hasTarget ? 10 : 40, scale: 0.95 }}
+          initial={{ opacity: 0, y: 16, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: hasTarget ? 10 : 40, scale: 0.95 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
+          exit={{ opacity: 0, y: 16, scale: 0.97 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
           className={cn(
             "z-[102] bg-card rounded-2xl shadow-2xl border border-border/50 overflow-hidden",
-            !hasTarget
-              ? "fixed inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 sm:max-w-sm"
-              : "fixed w-[calc(100%-2rem)] sm:w-80"
+            // Mobile: fixed at bottom, full width with margin, above the bottom nav
+            // Desktop with target: positioned beside element
+            // Desktop/mobile no target: centered
+            "fixed"
           )}
-          style={hasTarget ? getTooltipPosition() : undefined}
+          style={(() => {
+            const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+
+            // Mobile: always anchor card above the bottom nav, centered
+            if (isMobile) {
+              return {
+                left: "1rem",
+                right: "1rem",
+                bottom: hasTarget
+                  ? `${window.innerHeight - (targetRect?.top ?? 0) + 16}px`
+                  : "5rem",
+                maxWidth: "calc(100% - 2rem)",
+              };
+            }
+
+            // Desktop without target: center screen
+            if (!hasTarget) {
+              return {
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                width: "22rem",
+                maxWidth: "calc(100% - 2rem)",
+              };
+            }
+
+            // Desktop with target: to the right of sidebar item
+            return {
+              top: `${targetRect!.top + targetRect!.height / 2}px`,
+              left: `${targetRect!.left + targetRect!.width + 16}px`,
+              transform: "translateY(-50%)",
+              width: "20rem",
+              maxWidth: "calc(100% - 2rem)",
+            };
+          })()}
         >
-          {/* Close button */}
+          {/* Close */}
           <button
             onClick={finish}
-            className="absolute top-2.5 right-2.5 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-10"
+            className="absolute top-2 right-2 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors z-10"
             aria-label="Close tutorial"
           >
             <X className="w-3.5 h-3.5" />
           </button>
 
-          {/* Icon + Content */}
-          <div className="flex items-start gap-3 p-4 pt-3">
+          {/* Content row */}
+          <div className="flex items-start gap-3 p-4 pb-2">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
               style={{ background: current.color }}
             >
               <Icon className="w-5 h-5 text-white" />
             </div>
-            <div className="min-w-0 pr-4">
-              <h2 className="text-sm font-display font-bold text-foreground mb-0.5">
+            <div className="min-w-0 pr-5">
+              <h2 className="text-sm font-display font-bold text-foreground mb-0.5 leading-tight">
                 {current.title}
               </h2>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -245,12 +240,8 @@ export default function OnboardingTutorial() {
             </div>
           </div>
 
-          {/* Progress dots + Actions */}
-          <div
-            className="px-4 pb-3 flex items-center justify-between"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
-          >
-            {/* Dots */}
+          {/* Progress & actions */}
+          <div className="px-4 pb-3 pt-1 flex items-center justify-between">
             <div className="flex items-center gap-1">
               {steps.map((_, i) => (
                 <div
@@ -263,19 +254,18 @@ export default function OnboardingTutorial() {
               ))}
             </div>
 
-            {/* Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {step > 0 ? (
                 <button
                   onClick={prev}
-                  className="flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg"
+                  className="flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg active:bg-muted/30"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   onClick={finish}
-                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg"
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg active:bg-muted/30"
                 >
                   Skip
                 </button>
@@ -283,11 +273,11 @@ export default function OnboardingTutorial() {
 
               <button
                 onClick={next}
-                className="flex items-center gap-1 text-xs font-semibold text-white px-3 py-1.5 rounded-lg transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
+                className="flex items-center gap-1 text-xs font-semibold text-white px-3.5 py-1.5 rounded-lg transition-all duration-200 hover:opacity-90 active:scale-[0.97]"
                 style={{ background: current.color }}
               >
                 {isLast ? "Get Started" : "Next"}
-                {!isLast && <ChevronRight className="w-3 h-3" />}
+                {!isLast && <ChevronRight className="w-3.5 h-3.5" />}
               </button>
             </div>
           </div>
