@@ -41,6 +41,7 @@ export const stageOptions: StageOption[] = [
   { id: "gap-year", label: "Gap Year", group: "Other", description: "Explore, work, or volunteer before next step", phaseTag: "Preparation" },
   { id: "masters", label: "Master's Applicant", group: "Other", description: "Prepare exams, SOP, and recommendations", phaseTag: "Application" },
   { id: "early-pro", label: "Early Professional", group: "Other", description: "Build career, upskill, and grow network", phaseTag: "Career Launch" },
+  { id: "new-grad", label: "New Graduate", group: "College", description: "Recently graduated — job hunting, interviewing, and launching your career", phaseTag: "Career Launch" },
 ];
 
 const categoryLabels: Record<string, string> = {

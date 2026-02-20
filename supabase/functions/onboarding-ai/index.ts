@@ -16,103 +16,53 @@ serve(async (req) => {
 
     let systemPrompt = "";
     let userPrompt = "";
+    // Use fast model for questions, better model for roadmap
+    let model = "google/gemini-2.5-flash-lite";
 
     if (action === "generate_questions") {
       const { educationLevel, stage, previousAnswers } = context;
 
-      systemPrompt = `You are an AI onboarding assistant for Pathwise, a career and education planning platform. Based on what the user has already told us, generate the NEXT set of personalized questions/options.
+      systemPrompt = `You are an onboarding assistant for Pathwise, a career/education planning app. Generate personalized options based on the user's stage.
 
-RESPOND WITH EXACTLY THIS JSON FORMAT (no markdown, no extra text):
-{
-  "situationOptions": [
-    { "label": "string - short title", "description": "string - 1-sentence explanation" }
-  ],
-  "whyOptions": ["string - reason for using the platform"],
-  "careerOptions": ["string - career field name"]
-}
+Return JSON only:
+{"situationOptions":[{"label":"short title","description":"1 sentence"}],"whyOptions":["reason"],"careerOptions":["field name"]}
 
 Rules:
-- Generate 6-8 situationOptions that are SPECIFIC to this exact user's stage. For example, a college sophomore should NOT see SAT prep options.
-- Generate 6-8 whyOptions that reflect realistic motivations for someone at this exact stage.
-- Generate 10-12 careerOptions tailored to what's realistic and relevant for their stage.
-- If they're a masters applicant, focus on research, grad programs, fellowships, SOPs — NOT undergrad topics.
-- If they're an early professional, focus on advancement, upskilling, leadership — NOT college applications.
-- If they're in high school, match options to their specific grade (9th grader vs 12th grader have very different needs).
-- Be specific, actionable, and avoid generic/overlapping options.
-- Consider their previous answers to avoid redundancy and build on what they've shared.`;
+- 6-8 situationOptions specific to their exact stage
+- 6-8 whyOptions reflecting realistic motivations
+- 10-12 careerOptions relevant to their stage
+- For new grads / college seniors: include job search, interview prep, resume building, salary negotiation, LinkedIn optimization
+- For masters applicants: GRE, SOP, fellowships — NOT undergrad topics
+- For professionals: advancement, upskilling — NOT college apps
+- Match high school options to specific grade level
+- Be specific, no generic overlaps`;
 
-      userPrompt = `User Profile So Far:
-- Education Level: ${educationLevel}
-- Specific Stage: ${stage}
-- School/Company: ${previousAnswers?.schoolName || "Not specified"}
-- Intended Major: ${previousAnswers?.intendedMajor || "Not specified"}
-- Years of Experience: ${previousAnswers?.yearsExperience || "N/A"}
-- Current Field: ${previousAnswers?.currentField || "Not specified"}
-- Level Details Already Selected: ${JSON.stringify(previousAnswers?.levelDetails || [])}
-
-Generate personalized question options for this specific user.`;
+      userPrompt = `Education: ${educationLevel}, Stage: ${stage}, School: ${previousAnswers?.schoolName || "N/A"}, Major: ${previousAnswers?.intendedMajor || "N/A"}, Experience: ${previousAnswers?.yearsExperience || "N/A"}, Field: ${previousAnswers?.currentField || "N/A"}, Details: ${JSON.stringify(previousAnswers?.levelDetails || [])}`;
 
     } else if (action === "generate_roadmap") {
+      model = "google/gemini-2.5-flash"; // Better model for roadmap quality
       const { educationLevel, stage, levelDetails, whyUsing, careerInterests, schoolName, intendedMajor, yearsExperience, currentField } = context;
 
-      systemPrompt = `You are an AI career and education planning expert for Pathwise. Based on everything the user has shared during onboarding, generate a FULLY PERSONALIZED multi-year roadmap.
+      systemPrompt = `You are an AI career planning expert for Pathwise. Generate a personalized multi-year roadmap.
 
-RESPOND WITH EXACTLY THIS JSON FORMAT (no markdown, no extra text):
-{
-  "stageName": "string - friendly name for user's current position",
-  "summary": "string - 2-3 sentence personalized summary of this roadmap",
-  "years": [
-    {
-      "year": "string - e.g. 'Year 1 (2025-2026)' or 'Next 6 Months'",
-      "label": "string - phase name like 'Foundation Building'",
-      "description": "string - what this phase is about",
-      "phase": "string - one of: Exploration, Preparation, Execution, Transition, Growth",
-      "months": [
-        {
-          "month": "string - e.g. 'January' or 'Month 1-2'",
-          "actions": [
-            {
-              "id": "string - unique kebab-case id",
-              "title": "string - specific actionable task",
-              "description": "string - brief details on how to do it",
-              "category": "string - one of: academics, testing, applications, career, networking, financial, personal, research",
-              "urgent": false
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
+Return JSON only:
+{"stageName":"friendly stage name","summary":"2-3 sentence personalized summary","years":[{"year":"e.g. Year 1","label":"phase name","description":"about this phase","phase":"Exploration|Preparation|Execution|Transition|Growth","months":[{"month":"e.g. January","actions":[{"id":"unique-kebab-id","title":"specific task","description":"how to do it","category":"academics|testing|applications|career|networking|financial|personal|research","urgent":false}]}]}]}
 
 Rules:
-- Generate 2-4 years of roadmap depending on stage (high schooler needs 4 years to college graduation, professional needs 1-2 years).
-- Each year should have 4-6 months with 2-4 actions each.
-- Mark truly time-sensitive items as urgent (deadlines like FAFSA, SAT registration, application deadlines).
-- Every action must be SPECIFIC to this user's situation. An 11th grader interested in CS should see "Register for AP Computer Science" not generic "take classes."
-- A master's applicant should see GRE prep, SOP drafts, program research — NOT undergrad activities.
-- A professional should see industry certifications, networking events, skill-building — NOT college applications.
-- Use real deadlines and timelines (e.g., "FAFSA opens October 1", "Common App due January 1").
-- Consider their career interests when generating specific tasks.
-- Each action id must be unique across the entire roadmap.`;
+- 2-3 years of roadmap (keep it focused, not overwhelming)
+- Each year: 3-4 months with 2-3 actions each
+- Mark time-sensitive items urgent (FAFSA deadlines, application dates)
+- For NEW GRADS and COLLEGE SENIORS: prioritize job search strategy, resume/portfolio building, interview prep (behavioral + technical), LinkedIn/networking, salary negotiation, company research, career fair prep, informational interviews
+- For master's applicants: GRE/GMAT prep, SOP writing, program research, funding
+- Use real deadlines where applicable
+- Every action must be specific to THIS user's career interests
+- Each action id must be unique`;
 
-      userPrompt = `Complete User Profile:
-- Education Level: ${educationLevel}
-- Specific Stage: ${stage}
-- School/Company: ${schoolName || "Not specified"}
-- Intended Major: ${intendedMajor || "Not specified"}
-- Years of Experience: ${yearsExperience || "N/A"}
-- Current Field: ${currentField || "Not specified"}
-- Situation Details: ${JSON.stringify(levelDetails || [])}
-- Why Using Pathwise: ${JSON.stringify(whyUsing || [])}
-- Career Interests: ${JSON.stringify(careerInterests || [])}
-
-Generate a fully personalized, detailed roadmap for this user. Make it feel like it was built specifically for them.`;
+      userPrompt = `Education: ${educationLevel}, Stage: ${stage}, School: ${schoolName || "N/A"}, Major: ${intendedMajor || "N/A"}, Experience: ${yearsExperience || "N/A"}, Field: ${currentField || "N/A"}, Situation: ${JSON.stringify(levelDetails || [])}, Why: ${JSON.stringify(whyUsing || [])}, Careers: ${JSON.stringify(careerInterests || [])}`;
 
     } else {
       return new Response(JSON.stringify({ error: "Unknown action" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -123,7 +73,7 @@ Generate a fully personalized, detailed roadmap for this user. Make it feel like
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

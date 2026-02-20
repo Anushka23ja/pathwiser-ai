@@ -76,7 +76,7 @@ function getStageOptionsForLevel(level: string): StageOption[] {
     case "High School":
       return stageOptions.filter(s => s.group === "High School" || s.id === "rs-1" || s.id === "rs-2" || s.id === "gap-year");
     case "College":
-      return stageOptions.filter(s => s.group === "College" || s.id === "masters" || s.id === "gap-year");
+      return stageOptions.filter(s => s.group === "College" || s.id === "masters" || s.id === "gap-year" || s.id === "new-grad");
     case "Professional":
       return stageOptions.filter(s => s.id === "early-pro" || s.id === "masters" || s.id === "gap-year");
     default:
