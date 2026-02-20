@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Briefcase, TrendingUp, DollarSign } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserProfile, RoadmapData } from "@/lib/types";
-import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Briefcase, TrendingUp, DollarSign, GraduationCap, ChevronDown, ChevronUp,
+  Sparkles, Zap, Shuffle, ArrowRight, Clock,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { UserProfile } from "@/lib/types";
+import { CareerRole, getCareersForProfile } from "@/lib/careerData";
 import DashboardLayout from "@/components/DashboardLayout";
 
 function getProfile(): UserProfile | null {
@@ -14,71 +19,130 @@ function getProfile(): UserProfile | null {
   } catch { return null; }
 }
 
+const categoryConfig = {
+  popular: { label: "Popular Roles", icon: Briefcase, description: "Well-established careers with proven demand and clear pathways." },
+  emerging: { label: "Emerging & Niche", icon: Sparkles, description: "Fast-growing roles at the frontier of industry — lesser-known but high potential." },
+  hybrid: { label: "Hybrid & Non-Traditional", icon: Shuffle, description: "Roles that blend multiple disciplines. Great for interdisciplinary thinkers." },
+};
+
+function RoleCard({ role }: { role: CareerRole }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <Card className="premium-card-hover overflow-hidden">
+      <CardContent className="p-0">
+        <button className="w-full text-left p-5 flex items-start gap-4" onClick={() => setExpanded(!expanded)}>
+          <div className="w-11 h-11 rounded-xl bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+            <Briefcase className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="font-display font-semibold text-foreground">{role.title}</h3>
+              <Badge variant="outline" className="text-[10px]">{role.field}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{role.description}</p>
+            <div className="flex items-center gap-4 mt-3 flex-wrap">
+              <span className="flex items-center gap-1 text-xs text-foreground font-medium">
+                <DollarSign className="w-3 h-3 text-accent" />{role.salaryRange}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-accent font-medium">
+                <TrendingUp className="w-3 h-3" />{role.growthRate} growth
+              </span>
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <GraduationCap className="w-3 h-3" />{role.education}
+              </span>
+            </div>
+          </div>
+          <div className="shrink-0 mt-1">
+            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </div>
+        </button>
+
+        <AnimatePresence>
+          {expanded && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+              <div className="px-5 pb-5 space-y-4 border-t border-border/40 pt-4">
+                {/* Day-to-Day */}
+                <div>
+                  <h4 className="section-label mb-2 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Day-to-Day</h4>
+                  <p className="text-sm text-foreground/80 leading-relaxed">{role.dayToDay}</p>
+                </div>
+                {/* Skills Roadmap */}
+                <div>
+                  <h4 className="section-label mb-2 flex items-center gap-1.5"><Zap className="w-3 h-3" /> Key Skills</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {role.skills.map(s => (
+                      <Badge key={s} variant="secondary" className="text-xs font-normal">{s}</Badge>
+                    ))}
+                  </div>
+                </div>
+                {/* Related Roles */}
+                <div>
+                  <h4 className="section-label mb-2 flex items-center gap-1.5"><ArrowRight className="w-3 h-3" /> Related Roles</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {role.relatedRoles.map(r => (
+                      <span key={r} className="text-xs text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">{r}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function CareersPage() {
   const navigate = useNavigate();
-  const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [careers, setCareers] = useState<ReturnType<typeof getCareersForProfile> | null>(null);
 
   useEffect(() => {
     const p = getProfile();
     if (!p) { navigate("/profile-setup"); return; }
     setProfile(p);
-    setRoadmap(generatePlaceholderRoadmap(p));
+    const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+    setCareers(getCareersForProfile(interests));
   }, [navigate]);
 
-  if (!roadmap || !profile) return null;
+  if (!careers || !profile) return null;
+
+  const sections = [
+    { key: "popular" as const, ...categoryConfig.popular, roles: careers.popular },
+    { key: "emerging" as const, ...categoryConfig.emerging, roles: careers.emerging },
+    { key: "hybrid" as const, ...categoryConfig.hybrid, roles: careers.hybrid },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold text-foreground mb-1">Career Paths</h1>
-          <p className="text-muted-foreground text-sm">Explore careers aligned with your interests in {(profile.careerInterests || profile.interests).join(", ")}.</p>
-        </div>
+      <div className="p-4 sm:p-8 max-w-4xl mx-auto space-y-8">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Career Explorer</h1>
+          <p className="text-muted-foreground text-sm max-w-lg">
+            Discover roles tailored to your interests in {(profile.careerInterests || profile.interests).join(", ")}. Expand any role for deep details.
+          </p>
+        </motion.div>
 
-        <div className="space-y-4">
-          {roadmap.possibleCareers.map((career, i) => (
-            <motion.div key={career.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-              <Card className="border-border/50 hover:shadow-[var(--shadow-elevated)] transition-shadow">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Briefcase className="w-6 h-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-display font-semibold text-foreground">{career.title}</h3>
-                      <div className="flex items-center gap-4 mt-2 flex-wrap">
-                        <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <DollarSign className="w-3.5 h-3.5" />{career.salary}
-                        </span>
-                        <span className="flex items-center gap-1 text-sm text-accent font-medium">
-                          <TrendingUp className="w-3.5 h-3.5" />{career.growth} growth
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {sections.map((section, si) => (
+          section.roles.length > 0 && (
+            <motion.div key={section.key} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: si * 0.1 }}>
+              <div className="flex items-center gap-2 mb-4">
+                <section.icon className="w-4 h-4 text-primary" />
+                <h2 className="text-sm font-display font-bold text-foreground uppercase tracking-wide">{section.label}</h2>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4 -mt-2">{section.description}</p>
+              <div className="space-y-3">
+                {section.roles.map((role, i) => (
+                  <motion.div key={role.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: si * 0.1 + i * 0.05 }}>
+                    <RoleCard role={role} />
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
-          ))}
-        </div>
-
-        {/* Alternative Paths */}
-        <div className="mt-8">
-          <h2 className="text-lg font-display font-semibold text-foreground mb-4">Alternative Paths</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {roadmap.alternativePaths.map((alt, i) => (
-              <motion.div key={alt.title} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.06 }}>
-                <Card className="border-border/50 h-full">
-                  <CardContent className="p-5">
-                    <h3 className="font-display font-semibold text-foreground text-sm mb-1">{alt.title}</h3>
-                    <p className="text-muted-foreground text-sm">{alt.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+          )
+        ))}
       </div>
     </DashboardLayout>
   );
