@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import LandingPage from "./pages/LandingPage";
 import AuthPage from "./pages/AuthPage";
 import ProfileSetupPage from "./pages/ProfileSetupPage";
 import RoadmapPage from "./pages/RoadmapPage";
@@ -20,10 +19,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 rounded-full gradient-cta animate-pulse-soft" /></div>;
+  if (user) return <Navigate to="/profile-setup" replace />;
+  return <>{children}</>;
+}
+
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<LandingPage />} />
-    <Route path="/auth" element={<AuthPage />} />
+    <Route path="/" element={<Navigate to="/auth" replace />} />
+    <Route path="/auth" element={<AuthGuard><AuthPage /></AuthGuard>} />
     <Route path="/profile-setup" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
     <Route path="/onboarding" element={<ProtectedRoute><ProfileSetupPage /></ProtectedRoute>} />
     <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />

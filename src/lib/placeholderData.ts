@@ -1,97 +1,201 @@
 import { RoadmapData, UserProfile } from "./types";
 
-export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
-  const interestMap: Record<string, { majors: string[]; careers: { title: string; salary: string; growth: string }[] }> = {
-    "Science & Technology": {
-      majors: ["Computer Science", "Data Science", "Biomedical Engineering"],
-      careers: [
-        { title: "Software Engineer", salary: "$120K–$180K", growth: "25%" },
-        { title: "Data Scientist", salary: "$110K–$160K", growth: "36%" },
-        { title: "AI/ML Engineer", salary: "$130K–$200K", growth: "40%" },
-      ],
-    },
-    "Business & Finance": {
-      majors: ["Finance", "Business Administration", "Economics"],
-      careers: [
-        { title: "Financial Analyst", salary: "$85K–$130K", growth: "9%" },
-        { title: "Management Consultant", salary: "$100K–$170K", growth: "14%" },
-        { title: "Product Manager", salary: "$110K–$160K", growth: "20%" },
-      ],
-    },
-    "Arts & Humanities": {
-      majors: ["Communications", "Psychology", "English Literature"],
-      careers: [
-        { title: "UX Designer", salary: "$80K–$130K", growth: "16%" },
-        { title: "Content Strategist", salary: "$70K–$110K", growth: "12%" },
-        { title: "Clinical Psychologist", salary: "$85K–$130K", growth: "14%" },
-      ],
-    },
-    "Healthcare & Medicine": {
-      majors: ["Biology (Pre-Med)", "Nursing", "Public Health"],
-      careers: [
-        { title: "Physician", salary: "$200K–$350K", growth: "3%" },
-        { title: "Nurse Practitioner", salary: "$110K–$150K", growth: "46%" },
-        { title: "Public Health Director", salary: "$90K–$140K", growth: "17%" },
-      ],
-    },
-  };
+const careerFieldMap: Record<string, { majors: string[]; careers: { title: string; salary: string; growth: string }[] }> = {
+  "Software & Tech": {
+    majors: ["Computer Science", "Software Engineering", "Data Science"],
+    careers: [
+      { title: "Software Engineer", salary: "$120K–$180K", growth: "25%" },
+      { title: "Data Scientist", salary: "$110K–$160K", growth: "36%" },
+      { title: "AI/ML Engineer", salary: "$130K–$200K", growth: "40%" },
+    ],
+  },
+  "Healthcare & Medicine": {
+    majors: ["Biology (Pre-Med)", "Nursing", "Public Health"],
+    careers: [
+      { title: "Physician", salary: "$200K–$350K", growth: "3%" },
+      { title: "Nurse Practitioner", salary: "$110K–$150K", growth: "46%" },
+      { title: "Public Health Director", salary: "$90K–$140K", growth: "17%" },
+    ],
+  },
+  "Business & Finance": {
+    majors: ["Finance", "Business Administration", "Economics"],
+    careers: [
+      { title: "Financial Analyst", salary: "$85K–$130K", growth: "9%" },
+      { title: "Management Consultant", salary: "$100K–$170K", growth: "14%" },
+      { title: "Product Manager", salary: "$110K–$160K", growth: "20%" },
+    ],
+  },
+  "Engineering": {
+    majors: ["Mechanical Engineering", "Electrical Engineering", "Civil Engineering"],
+    careers: [
+      { title: "Mechanical Engineer", salary: "$90K–$140K", growth: "7%" },
+      { title: "Electrical Engineer", salary: "$95K–$145K", growth: "9%" },
+      { title: "Civil Engineer", salary: "$85K–$130K", growth: "8%" },
+    ],
+  },
+  "Education & Teaching": {
+    majors: ["Education", "Curriculum & Instruction", "Special Education"],
+    careers: [
+      { title: "Teacher", salary: "$50K–$80K", growth: "5%" },
+      { title: "School Counselor", salary: "$60K–$90K", growth: "10%" },
+      { title: "Education Administrator", salary: "$80K–$120K", growth: "8%" },
+    ],
+  },
+  "Creative & Design": {
+    majors: ["Graphic Design", "Fine Arts", "UX/UI Design"],
+    careers: [
+      { title: "UX Designer", salary: "$80K–$130K", growth: "16%" },
+      { title: "Art Director", salary: "$90K–$150K", growth: "11%" },
+      { title: "Animator", salary: "$60K–$100K", growth: "12%" },
+    ],
+  },
+  "Law & Policy": {
+    majors: ["Political Science", "Pre-Law", "Public Policy"],
+    careers: [
+      { title: "Lawyer", salary: "$100K–$200K", growth: "10%" },
+      { title: "Policy Analyst", salary: "$70K–$110K", growth: "6%" },
+      { title: "Paralegal", salary: "$50K–$75K", growth: "12%" },
+    ],
+  },
+  "Science & Research": {
+    majors: ["Biology", "Chemistry", "Physics"],
+    careers: [
+      { title: "Research Scientist", salary: "$80K–$130K", growth: "8%" },
+      { title: "Lab Director", salary: "$100K–$160K", growth: "5%" },
+      { title: "Biostatistician", salary: "$90K–$140K", growth: "30%" },
+    ],
+  },
+  "Trades & Skilled Labor": {
+    majors: ["Trade Certification", "Apprenticeship Program", "Technical Training"],
+    careers: [
+      { title: "Electrician", salary: "$55K–$100K", growth: "9%" },
+      { title: "Plumber", salary: "$50K–$90K", growth: "5%" },
+      { title: "HVAC Technician", salary: "$50K–$85K", growth: "13%" },
+    ],
+  },
+  "Marketing & Communications": {
+    majors: ["Marketing", "Communications", "Public Relations"],
+    careers: [
+      { title: "Marketing Manager", salary: "$80K–$140K", growth: "10%" },
+      { title: "Content Strategist", salary: "$70K–$110K", growth: "12%" },
+      { title: "Social Media Director", salary: "$65K–$100K", growth: "15%" },
+    ],
+  },
+  "Social Work & Counseling": {
+    majors: ["Social Work", "Psychology", "Counseling"],
+    careers: [
+      { title: "Social Worker", salary: "$50K–$80K", growth: "12%" },
+      { title: "Counselor", salary: "$55K–$85K", growth: "22%" },
+      { title: "Clinical Psychologist", salary: "$85K–$130K", growth: "14%" },
+    ],
+  },
+  "Entrepreneurship": {
+    majors: ["Business Administration", "Entrepreneurship", "Innovation & Design"],
+    careers: [
+      { title: "Startup Founder", salary: "Varies", growth: "N/A" },
+      { title: "Business Development", salary: "$80K–$140K", growth: "15%" },
+      { title: "Venture Capital Analyst", salary: "$90K–$150K", growth: "12%" },
+    ],
+  },
+};
 
-  const primary = profile.interests[0] || "Science & Technology";
-  const data = interestMap[primary] || interestMap["Science & Technology"];
+export function generatePlaceholderRoadmap(profile: UserProfile): RoadmapData {
+  // Use career interests to build personalized data
+  const primaryField = profile.interests[0] || profile.careerInterests[0] || "Software & Tech";
+  const fieldData = careerFieldMap[primaryField] || careerFieldMap["Software & Tech"];
+
+  // Combine majors and careers from all selected fields
+  const allMajors = new Set<string>();
+  const allCareers: { title: string; salary: string; growth: string }[] = [];
+  
+  for (const field of profile.interests.length > 0 ? profile.interests : profile.careerInterests) {
+    const data = careerFieldMap[field];
+    if (data) {
+      data.majors.forEach((m) => allMajors.add(m));
+      allCareers.push(...data.careers);
+    }
+  }
+
+  // Fallback
+  if (allMajors.size === 0) fieldData.majors.forEach((m) => allMajors.add(m));
+  if (allCareers.length === 0) allCareers.push(...fieldData.careers);
 
   const timelineByLevel: Record<string, { year: string; title: string; description: string }[]> = {
     "High School": [
-      { year: "Year 1", title: "Explore & Foundation", description: "Take AP/honors courses in your interest areas. Join relevant clubs and explore extracurriculars." },
-      { year: "Year 2", title: "Build & Prepare", description: "Start SAT/ACT prep, attend college info sessions, and seek mentorship or job shadowing." },
-      { year: "Year 3", title: "Apply & Transition", description: "Apply to colleges, finalize your personal statement, and secure scholarships." },
-      { year: "Year 4", title: "Launch Undergrad", description: "Begin your freshman year with a clear major path and join relevant organizations." },
+      { year: "Now", title: "Explore & Discover", description: "Take challenging courses in your interest areas. Join clubs, volunteer, and explore what excites you." },
+      { year: "Next Year", title: "Build Your Profile", description: "Start SAT/ACT prep, attend college info sessions. Seek job shadowing or internships in your fields of interest." },
+      { year: "Application Year", title: "Apply & Decide", description: "Apply to colleges that match your career goals. Write compelling essays and secure scholarships." },
+      { year: "After Graduation", title: "Launch Your Path", description: "Begin college or alternative path with a clear direction and relevant extracurriculars." },
     ],
-    "Running Start": [
-      { year: "Year 1", title: "Dual Enrollment", description: "Complete general requirements while earning college credits alongside high school diploma." },
-      { year: "Year 2", title: "Transfer Prep", description: "Focus on major prerequisites and build your transfer application portfolio." },
-      { year: "Year 3", title: "University Entry", description: "Transfer to a 4-year university as a junior with significant credits completed." },
-      { year: "Year 4", title: "Graduation & Career", description: "Complete your bachelor's degree and begin career or graduate school applications." },
+    "College": [
+      { year: "This Semester", title: "Declare & Focus", description: "Confirm your major based on your career interests. Meet with academic advisors and map your remaining courses." },
+      { year: "Next Semester", title: "Gain Experience", description: "Apply for internships, research positions, or co-ops. Build skills through real-world projects." },
+      { year: "Final Year", title: "Prepare to Launch", description: "Network actively, attend career fairs, and begin job applications or grad school prep." },
+      { year: "Post-Graduation", title: "Career Entry", description: "Start your career, consider certifications, or apply to graduate programs for advancement." },
     ],
-    "Undergraduate": [
-      { year: "Year 1", title: "Specialize", description: "Declare your major, take advanced coursework, and secure internships." },
-      { year: "Year 2", title: "Experience", description: "Complete internships, research projects, or co-ops in your field." },
-      { year: "Year 3", title: "Career Launch", description: "Apply for jobs or graduate programs. Build your professional network." },
-    ],
-    "Master's Degree": [
-      { year: "Year 1", title: "Advanced Study", description: "Complete core graduate coursework and begin thesis or capstone research." },
-      { year: "Year 2", title: "Thesis & Career", description: "Finish your thesis, attend conferences, and secure your first senior role." },
+    "Professional": [
+      { year: "Month 1–3", title: "Assess & Plan", description: "Evaluate your current skills vs. your target career. Identify gaps and research programs, certifications, or degrees." },
+      { year: "Month 3–6", title: "Skill Up", description: "Enroll in courses, bootcamps, or certifications. Start building a portfolio or gaining relevant experience." },
+      { year: "Month 6–12", title: "Transition", description: "Apply for roles in your target field, leverage your network, and update your professional brand." },
+      { year: "Year 2+", title: "Grow & Advance", description: "Establish yourself in your new path. Seek promotions, mentorship, and continued learning opportunities." },
     ],
   };
 
+  const extracurricularsByLevel: Record<string, string[]> = {
+    "High School": [
+      "Join relevant clubs and student organizations",
+      "Volunteer in your community",
+      "Take AP or dual-enrollment courses",
+      "Attend college campus tours",
+      "Start a personal project or blog",
+    ],
+    "College": [
+      "Secure internships every summer",
+      "Join professional student organizations",
+      "Attend career fairs and networking events",
+      "Work on capstone or research projects",
+      "Build an online portfolio or LinkedIn presence",
+    ],
+    "Professional": [
+      "Get industry certifications",
+      "Attend conferences and workshops",
+      "Find a mentor in your target field",
+      "Freelance or volunteer for experience",
+      "Join professional associations",
+    ],
+  };
+
+  const fieldsStr = (profile.interests.length > 0 ? profile.interests : profile.careerInterests).join(" and ");
+
   return {
-    recommendedMajors: data.majors,
-    possibleCareers: data.careers,
-    timeline: timelineByLevel[profile.educationLevel] || timelineByLevel["Undergraduate"],
-    extracurriculars: [
-      "Industry-specific internships",
-      "Student organizations & leadership roles",
-      "Research assistant positions",
-      "Hackathons or case competitions",
-      "Volunteer work in related fields",
-    ],
+    recommendedMajors: Array.from(allMajors).slice(0, 5),
+    possibleCareers: allCareers.slice(0, 5),
+    timeline: timelineByLevel[profile.educationLevel] || timelineByLevel["College"],
+    extracurriculars: extracurricularsByLevel[profile.educationLevel] || extracurricularsByLevel["College"],
     alternativePaths: [
-      { title: "Bootcamp Fast-Track", description: "Skip or supplement traditional education with an intensive coding or professional bootcamp for faster career entry." },
-      { title: "Gap Year Experience", description: "Take a structured gap year with internships, travel, or volunteer work to gain clarity and real-world experience." },
+      { title: "Bootcamp or Certificate", description: "Fast-track into your field with an intensive program. Great if you want hands-on skills quickly." },
+      { title: "Gap Year / Experience First", description: "Work, travel, or volunteer first to gain clarity. Many successful people took non-linear paths." },
     ],
-    summary: `Based on your interest in ${primary} and ${profile.educationLevel} level, we recommend focusing on ${data.majors[0]} as your primary pathway. This aligns with your goals of ${profile.longTermGoals.join(", ").toLowerCase()}.`,
+    summary: `As a ${profile.educationLevel.toLowerCase()} student interested in ${fieldsStr}, we've built a roadmap focused on ${fieldData.majors[0]} and related fields. Your path includes actionable steps, career options with salary data, and activities to help you stand out.`,
   };
 }
 
 export function generateChatResponse(question: string): string {
   const q = question.toLowerCase();
-  if (q.includes("running start")) {
-    return "Running Start is an excellent option! It lets you earn college credits while still in high school, saving both time and money. You'll take classes at a community college (tuition-free in many states) and can transfer those credits to a 4-year university. It's especially great if you're motivated, want to get ahead, or are considering a specific career path early. The key trade-off is less time for traditional high school activities.";
+  if (q.includes("running start") || q.includes("dual enrollment")) {
+    return "Running Start / dual enrollment lets you earn college credits while in high school — often tuition-free. It saves time and money, and gives you a head start. The trade-off is less time for traditional high school activities. It's great if you're self-motivated and want to get ahead.";
   }
-  if (q.includes("major") || q.includes("psychology") || q.includes("business")) {
-    return "If you're interested in both psychology and business, consider majors like Industrial-Organizational Psychology, Behavioral Economics, or Marketing with a Psychology minor. These combine human behavior insights with business applications. Career options include UX Research, HR Management, Consumer Insights, or Management Consulting. Many top companies value this interdisciplinary skillset!";
+  if (q.includes("switch") || q.includes("change") || q.includes("career")) {
+    return "Career switching is more common than you think! Start by identifying transferable skills from your current role. Research your target field — talk to people in it, take online courses, and consider certifications or a master's degree. Many bootcamps also offer career-change programs with job placement support.";
   }
-  if (q.includes("medical") || q.includes("med school")) {
-    return "Preparing for medical school is a multi-year journey. Start with strong pre-med prerequisites (Biology, Chemistry, Organic Chemistry, Physics, Biochemistry). Maintain a high GPA (3.5+), get clinical experience through volunteering or shadowing, conduct research, and prepare for the MCAT. Consider joining pre-med clubs and seek mentorship from current medical students or physicians.";
+  if (q.includes("major") || q.includes("what should i study")) {
+    return "Choosing a major depends on your interests, career goals, and strengths. Think about what subjects energize you, what kind of work environment you want, and what skills are in demand. Don't stress too much — many successful people work in fields different from their major. The key is building transferable skills.";
   }
-  return "That's a great question! Based on current education trends, I'd recommend exploring multiple pathways and talking to professionals in your field of interest. Consider factors like program accreditation, career placement rates, scholarship opportunities, and long-term earning potential. Would you like me to dive deeper into any specific aspect?";
+  if (q.includes("medical") || q.includes("med school") || q.includes("doctor")) {
+    return "Medical school requires strong pre-med prerequisites (Biology, Chemistry, Organic Chemistry, Physics, Biochemistry), a competitive GPA (3.5+), MCAT prep, clinical experience, and research. It's a long road but incredibly rewarding. Start early with volunteering and shadowing physicians.";
+  }
+  if (q.includes("salary") || q.includes("money") || q.includes("pay")) {
+    return "Salary depends on field, location, experience, and education level. Tech and healthcare tend to pay highest. But consider total compensation (benefits, work-life balance, growth potential). Use sites like Glassdoor, Levels.fyi, and BLS.gov for accurate salary data in your target field.";
+  }
+  return "Great question! I'd recommend researching specific programs and talking to professionals in your field of interest. Consider factors like program accreditation, career placement rates, scholarship opportunities, and long-term growth potential. Want me to dive deeper into any specific topic?";
 }

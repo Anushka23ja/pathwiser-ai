@@ -1,25 +1,64 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2, School, BookOpen, Heart } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Building2, Briefcase, Target, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const steps = [
-  { id: "school", title: "Your School", icon: School },
-  { id: "academics", title: "Academics", icon: BookOpen },
-  { id: "preferences", title: "Preferences", icon: Heart },
+  { id: "level", title: "About You" },
+  { id: "why", title: "Your Why" },
+  { id: "careers", title: "Career Goals" },
 ];
 
-const educationLevels = ["High School", "Running Start", "Undergraduate", "Master's Degree"];
-const interestOptions = ["Science & Technology", "Business & Finance", "Arts & Humanities", "Healthcare & Medicine", "Engineering", "Social Sciences", "Education", "Law & Policy"];
-const subjectOptions = ["Mathematics", "Biology", "Chemistry", "Physics", "English", "History", "Computer Science", "Psychology", "Economics", "Art & Design"];
-const careerOptions = ["Software Engineer", "Doctor/Physician", "Business Analyst", "Teacher", "Data Scientist", "Designer", "Lawyer", "Nurse", "Entrepreneur", "Researcher"];
-const gpaRanges = ["4.0", "3.5–3.9", "3.0–3.4", "2.5–2.9", "Below 2.5", "Not sure"];
-const budgetOptions = ["No concerns", "Some concerns", "Major concern", "Need full scholarship"];
-const goalOptions = ["High salary", "Making an impact", "Work-life balance", "Entrepreneurship", "Creative expression", "Not sure yet"];
+const levelCards = [
+  {
+    value: "High School",
+    icon: GraduationCap,
+    title: "High School Student",
+    description: "I'm in high school exploring what comes next — college, trade school, or other paths.",
+  },
+  {
+    value: "College",
+    icon: Building2,
+    title: "College Student",
+    description: "I'm currently enrolled in college (community college, university, or Running Start).",
+  },
+  {
+    value: "Professional",
+    icon: Briefcase,
+    title: "Working Professional",
+    description: "I'm already working and looking to advance, switch careers, or go back to school.",
+  },
+];
+
+const whyOptions = [
+  "I don't know what career to pick",
+  "I want to switch my major or career",
+  "I'm exploring graduate school options",
+  "I want to advance in my current field",
+  "I need help planning my next steps",
+  "I want to compare different career paths",
+  "I'm considering going back to school",
+  "I want to find higher-paying opportunities",
+];
+
+const careerInterestOptions = [
+  "Software & Tech",
+  "Healthcare & Medicine",
+  "Business & Finance",
+  "Engineering",
+  "Education & Teaching",
+  "Creative & Design",
+  "Law & Policy",
+  "Science & Research",
+  "Trades & Skilled Labor",
+  "Marketing & Communications",
+  "Social Work & Counseling",
+  "Entrepreneurship",
+];
 
 function ToggleChip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
@@ -38,56 +77,30 @@ function ToggleChip({ label, selected, onClick }: { label: string; selected: boo
   );
 }
 
-function MultiSelect({ options, value, onChange }: { options: string[]; value: string[]; onChange: (v: string[]) => void }) {
-  const toggle = (opt: string) => {
-    onChange(value.includes(opt) ? value.filter((v) => v !== opt) : [...value, opt]);
-  };
-  return (
-    <div className="flex flex-wrap gap-3">
-      {options.map((opt) => (
-        <ToggleChip key={opt} label={opt} selected={value.includes(opt)} onClick={() => toggle(opt)} />
-      ))}
-    </div>
-  );
-}
-
-function SingleSelect({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-3">
-      {options.map((opt) => (
-        <ToggleChip key={opt} label={opt} selected={value === opt} onClick={() => onChange(opt)} />
-      ))}
-    </div>
-  );
-}
-
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
-    schoolName: "",
     educationLevel: "",
-    gradeYear: "",
-    favoriteSubjects: [] as string[],
-    interests: [] as string[],
+    whyUsing: [] as string[],
     careerInterests: [] as string[],
-    gpaRange: "",
-    budgetConcern: "",
-    location: "",
-    longTermGoals: [] as string[],
+    schoolName: "",
   });
 
   useEffect(() => {
     if (!user) navigate("/auth");
   }, [user, navigate]);
 
+  const toggleArrayItem = (arr: string[], item: string) =>
+    arr.includes(item) ? arr.filter((v) => v !== item) : [...arr, item];
+
   const canProceed = () => {
     switch (step) {
-      case 0: return profile.schoolName.trim() !== "" && profile.educationLevel !== "";
-      case 1: return profile.interests.length > 0 && profile.favoriteSubjects.length > 0;
-      case 2: return profile.longTermGoals.length > 0;
+      case 0: return profile.educationLevel !== "";
+      case 1: return profile.whyUsing.length > 0;
+      case 2: return profile.careerInterests.length > 0;
       default: return false;
     }
   };
@@ -99,34 +112,28 @@ export default function ProfileSetupPage() {
       const { error } = await supabase
         .from("profiles")
         .update({
-          school_name: profile.schoolName,
           education_level: profile.educationLevel,
-          grade_year: profile.gradeYear,
-          favorite_subjects: profile.favoriteSubjects,
-          interests: profile.interests,
+          school_name: profile.schoolName || null,
+          interests: profile.whyUsing,
           career_interests: profile.careerInterests,
-          gpa_range: profile.gpaRange,
-          budget_concern: profile.budgetConcern,
-          location: profile.location,
-          long_term_goals: profile.longTermGoals,
+          long_term_goals: profile.whyUsing,
         })
         .eq("user_id", user.id);
 
       if (error) throw error;
 
-      // Also store in localStorage for the roadmap page
       localStorage.setItem("pathwise-profile", JSON.stringify({
         educationLevel: profile.educationLevel,
-        interests: profile.interests,
-        favoriteSubjects: profile.favoriteSubjects,
+        interests: profile.careerInterests,
+        favoriteSubjects: [],
         careerInterests: profile.careerInterests,
-        gpaRange: profile.gpaRange,
-        budgetConcern: profile.budgetConcern,
-        location: profile.location,
-        longTermGoals: profile.longTermGoals,
+        gpaRange: "",
+        budgetConcern: "",
+        location: "",
+        longTermGoals: profile.whyUsing,
       }));
 
-      toast({ title: "Profile saved!", description: "Let's generate your roadmap." });
+      toast({ title: "You're all set!", description: "Generating your personalized roadmap..." });
       navigate("/roadmap");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -144,15 +151,9 @@ export default function ProfileSetupPage() {
           <span className="font-display text-xl font-bold text-foreground tracking-tight">
             Path<span className="text-primary">wise</span>
           </span>
-          <div className="flex items-center gap-4">
-            {steps.map((s, i) => (
-              <div key={s.id} className={`hidden sm:flex items-center gap-1.5 text-sm ${i <= step ? "text-primary font-medium" : "text-muted-foreground"}`}>
-                <s.icon className="w-4 h-4" />
-                {s.title}
-                {i < steps.length - 1 && <span className="mx-2 text-border">→</span>}
-              </div>
-            ))}
-          </div>
+          <span className="text-sm text-muted-foreground">
+            Step {step + 1} of {steps.length}
+          </span>
         </div>
       </nav>
 
@@ -175,89 +176,115 @@ export default function ProfileSetupPage() {
               exit={{ opacity: 0, x: -30 }}
               transition={{ duration: 0.3 }}
             >
+              {/* Step 1: Education Level */}
               {step === 0 && (
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-3">Tell us about your school</h2>
-                  <p className="text-muted-foreground mb-8">We'll use this to tailor your pathway.</p>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">School / College Name</label>
+                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">Which best describes you?</h2>
+                  <p className="text-muted-foreground mb-8">Pick one so we can personalize your experience.</p>
+
+                  <div className="grid gap-4">
+                    {levelCards.map((card) => (
+                      <button
+                        key={card.value}
+                        type="button"
+                        onClick={() => setProfile({ ...profile, educationLevel: card.value })}
+                        className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 ${
+                          profile.educationLevel === card.value
+                            ? "border-primary bg-primary/5 shadow-elevated"
+                            : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"
+                        }`}
+                      >
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                          profile.educationLevel === card.value
+                            ? "gradient-cta"
+                            : "bg-muted"
+                        }`}>
+                          <card.icon className={`w-6 h-6 ${
+                            profile.educationLevel === card.value
+                              ? "text-primary-foreground"
+                              : "text-muted-foreground"
+                          }`} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-display font-semibold text-foreground">{card.title}</h3>
+                            {profile.educationLevel === card.value && (
+                              <CheckCircle2 className="w-5 h-5 text-primary" />
+                            )}
+                          </div>
+                          <p className="text-muted-foreground text-sm mt-1">{card.description}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {profile.educationLevel && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-6"
+                    >
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        {profile.educationLevel === "Professional"
+                          ? "Company or last school (optional)"
+                          : "School or college name (optional)"}
+                      </label>
                       <input
                         type="text"
-                        placeholder="e.g. University of Washington, Lincoln High School..."
+                        placeholder={
+                          profile.educationLevel === "High School"
+                            ? "e.g. Lincoln High School"
+                            : profile.educationLevel === "College"
+                            ? "e.g. University of Washington"
+                            : "e.g. Google, Amazon, previous school..."
+                        }
                         value={profile.schoolName}
                         onChange={(e) => setProfile({ ...profile, schoolName: e.target.value })}
                         className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Education Level</label>
-                      <SingleSelect options={educationLevels} value={profile.educationLevel} onChange={(v) => setProfile({ ...profile, educationLevel: v })} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Current Grade / Year</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Junior, Sophomore, 11th Grade..."
-                        value={profile.gradeYear}
-                        onChange={(e) => setProfile({ ...profile, gradeYear: e.target.value })}
-                        className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">GPA Range</label>
-                        <SingleSelect options={gpaRanges} value={profile.gpaRange} onChange={(v) => setProfile({ ...profile, gpaRange: v })} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Location / State</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Washington"
-                          value={profile.location}
-                          onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                          className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                    </motion.div>
+                  )}
                 </div>
               )}
 
+              {/* Step 2: Why are you here */}
               {step === 1 && (
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-3">Your academic interests</h2>
-                  <p className="text-muted-foreground mb-8">Select all that resonate with you.</p>
-                  <div className="space-y-8">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Areas of Interest</label>
-                      <MultiSelect options={interestOptions} value={profile.interests} onChange={(v) => setProfile({ ...profile, interests: v })} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Favorite Subjects</label>
-                      <MultiSelect options={subjectOptions} value={profile.favoriteSubjects} onChange={(v) => setProfile({ ...profile, favoriteSubjects: v })} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Career Interests (optional)</label>
-                      <MultiSelect options={careerOptions} value={profile.careerInterests} onChange={(v) => setProfile({ ...profile, careerInterests: v })} />
-                    </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Lightbulb className="w-7 h-7 text-primary" />
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Why are you using Pathwise?</h2>
+                  </div>
+                  <p className="text-muted-foreground mb-8">Select all that apply — this helps us give better recommendations.</p>
+                  <div className="flex flex-wrap gap-3">
+                    {whyOptions.map((opt) => (
+                      <ToggleChip
+                        key={opt}
+                        label={opt}
+                        selected={profile.whyUsing.includes(opt)}
+                        onClick={() => setProfile({ ...profile, whyUsing: toggleArrayItem(profile.whyUsing, opt) })}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
 
+              {/* Step 3: Career interests */}
               {step === 2 && (
                 <div>
-                  <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-3">Your priorities & goals</h2>
-                  <p className="text-muted-foreground mb-8">What matters most for your future?</p>
-                  <div className="space-y-8">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Long-term Goals</label>
-                      <MultiSelect options={goalOptions} value={profile.longTermGoals} onChange={(v) => setProfile({ ...profile, longTermGoals: v })} />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-3">Budget Concerns</label>
-                      <SingleSelect options={budgetOptions} value={profile.budgetConcern} onChange={(v) => setProfile({ ...profile, budgetConcern: v })} />
-                    </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <Target className="w-7 h-7 text-primary" />
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">Careers you want to explore</h2>
+                  </div>
+                  <p className="text-muted-foreground mb-8">Pick the fields you're curious about — we'll build your roadmap around these.</p>
+                  <div className="flex flex-wrap gap-3">
+                    {careerInterestOptions.map((opt) => (
+                      <ToggleChip
+                        key={opt}
+                        label={opt}
+                        selected={profile.careerInterests.includes(opt)}
+                        onClick={() => setProfile({ ...profile, careerInterests: toggleArrayItem(profile.careerInterests, opt) })}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -267,7 +294,8 @@ export default function ProfileSetupPage() {
           <div className="flex justify-between items-center mt-12">
             <Button
               variant="outline"
-              onClick={() => (step > 0 ? setStep(step - 1) : navigate("/"))}
+              onClick={() => (step > 0 ? setStep(step - 1) : null)}
+              disabled={step === 0}
               className="border-border hover:bg-muted"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -288,7 +316,7 @@ export default function ProfileSetupPage() {
                 disabled={!canProceed() || saving}
                 onClick={handleSubmit}
               >
-                {saving ? "Saving..." : "Generate My Roadmap"}
+                {saving ? "Saving..." : "Build My Roadmap"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             )}
