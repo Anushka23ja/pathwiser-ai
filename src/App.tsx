@@ -15,6 +15,7 @@ import NetworkingPage from "./pages/NetworkingPage";
 import ChatPage from "./pages/ChatPage";
 import SettingsPage from "./pages/SettingsPage";
 import ActionCenterPage from "./pages/ActionCenterPage";
+import ExplorePage from "./pages/ExplorePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
     <Route path="/actions" element={<ProtectedRoute><ActionCenterPage /></ProtectedRoute>} />
     <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />
+    <Route path="/explore" element={<ProtectedRoute><ExplorePage /></ProtectedRoute>} />
     <Route path="/schools" element={<ProtectedRoute><SchoolsPage /></ProtectedRoute>} />
     <Route path="/careers" element={<ProtectedRoute><CareersPage /></ProtectedRoute>} />
     <Route path="/companies" element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>} />
