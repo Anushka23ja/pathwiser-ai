@@ -4,24 +4,73 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, Download, RotateCcw,
   CheckCircle2, Circle, Calendar, BookOpen, TrendingUp,
-  AlertTriangle, Zap,
+  AlertTriangle, Zap, Sparkles, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { UserProfile, RoadmapData } from "@/lib/types";
-import { generatePlaceholderRoadmap } from "@/lib/placeholderData";
+import { UserProfile } from "@/lib/types";
 import {
   generateMonthlyPlan, YearPlan, categoryLabels, stageOptions, phaseColors,
 } from "@/lib/monthlyPlannerData";
 import DashboardLayout from "@/components/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 function getProfile(): UserProfile | null {
   try {
     const stored = localStorage.getItem("pathwise-profile");
     return stored ? JSON.parse(stored) : null;
   } catch { return null; }
+}
+
+interface AIRoadmap {
+  stageName: string;
+  summary: string;
+  years: {
+    year: string;
+    label: string;
+    description: string;
+    phase: string;
+    months: {
+      month: string;
+      actions: {
+        id: string;
+        title: string;
+        description: string;
+        category: string;
+        urgent?: boolean;
+      }[];
+    }[];
+  }[];
+}
+
+function getAIRoadmap(): AIRoadmap | null {
+  try {
+    const stored = localStorage.getItem("pathwise-ai-roadmap");
+    return stored ? JSON.parse(stored) : null;
+  } catch { return null; }
+}
+
+// Convert AI roadmap to YearPlan format for rendering
+function aiRoadmapToYearPlans(aiRoadmap: AIRoadmap): YearPlan[] {
+  return aiRoadmap.years.map((y) => ({
+    year: y.year,
+    label: y.label,
+    description: y.description,
+    phase: y.phase,
+    months: y.months.map((m) => ({
+      month: m.month,
+      actions: m.actions.map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        category: a.category as any,
+        urgent: a.urgent || false,
+      })),
+    })),
+  })) as YearPlan[];
 }
 
 // ─── Month Block ─────────────────────────────────────────
@@ -74,7 +123,7 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">{categoryLabels[action.category]?.split(" ")[0]}</span>
+              <span className="text-[10px] text-muted-foreground shrink-0">{categoryLabels[action.category]?.split(" ")[0] || action.category}</span>
             </button>
           );
         })}
@@ -145,40 +194,48 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
 export default function RoadmapPage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [roadmap, setRoadmap] = useState<RoadmapData | null>(null);
   const [monthlyPlan, setMonthlyPlan] = useState<YearPlan[]>([]);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [stageName, setStageName] = useState("");
+  const [isAIGenerated, setIsAIGenerated] = useState(false);
+  const [aiSummary, setAiSummary] = useState("");
+  const [regenerating, setRegenerating] = useState(false);
 
   useEffect(() => {
     const p = getProfile();
     if (!p) { navigate("/profile-setup"); return; }
     setProfile(p);
-    setRoadmap(generatePlaceholderRoadmap(p));
 
-    // Auto-detect stage from onboarding
-    const savedStageId = localStorage.getItem("pathwise-selected-stage");
-    if (savedStageId) {
-      const found = stageOptions.find(s => s.id === savedStageId);
-      if (found) {
-        setStageName(found.label);
-        const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
-        setMonthlyPlan(generateMonthlyPlan(found.id, interests));
+    // Try AI-generated roadmap first
+    const aiRoadmap = getAIRoadmap();
+    if (aiRoadmap) {
+      setStageName(aiRoadmap.stageName);
+      setAiSummary(aiRoadmap.summary || "");
+      setMonthlyPlan(aiRoadmapToYearPlans(aiRoadmap));
+      setIsAIGenerated(true);
+    } else {
+      // Fallback to static planner
+      const savedStageId = localStorage.getItem("pathwise-selected-stage");
+      if (savedStageId) {
+        const found = stageOptions.find(s => s.id === savedStageId);
+        if (found) {
+          setStageName(found.label);
+          const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+          setMonthlyPlan(generateMonthlyPlan(found.id, interests));
+        } else {
+          const fallbackId = deriveFallbackStage(p.educationLevel);
+          const fallbackStage = stageOptions.find(s => s.id === fallbackId);
+          setStageName(fallbackStage?.label || p.educationLevel);
+          const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
+          setMonthlyPlan(generateMonthlyPlan(fallbackId, interests));
+        }
       } else {
-        // Fallback: derive from educationLevel
         const fallbackId = deriveFallbackStage(p.educationLevel);
         const fallbackStage = stageOptions.find(s => s.id === fallbackId);
         setStageName(fallbackStage?.label || p.educationLevel);
         const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
         setMonthlyPlan(generateMonthlyPlan(fallbackId, interests));
       }
-    } else {
-      // No stage saved — derive from education level
-      const fallbackId = deriveFallbackStage(p.educationLevel);
-      const fallbackStage = stageOptions.find(s => s.id === fallbackId);
-      setStageName(fallbackStage?.label || p.educationLevel);
-      const interests = p.careerInterests?.length > 0 ? p.careerInterests : p.interests;
-      setMonthlyPlan(generateMonthlyPlan(fallbackId, interests));
     }
 
     try {
@@ -186,6 +243,45 @@ export default function RoadmapPage() {
       if (saved) setCompletedIds(new Set(JSON.parse(saved)));
     } catch {}
   }, [navigate]);
+
+  const regenerateRoadmap = async () => {
+    if (!profile) return;
+    setRegenerating(true);
+    try {
+      const savedStage = localStorage.getItem("pathwise-selected-stage") || "";
+      const { data, error } = await supabase.functions.invoke("onboarding-ai", {
+        body: {
+          action: "generate_roadmap",
+          context: {
+            educationLevel: profile.educationLevel,
+            stage: savedStage,
+            levelDetails: profile.favoriteSubjects || [],
+            whyUsing: profile.longTermGoals || [],
+            careerInterests: profile.careerInterests || [],
+            schoolName: "",
+            intendedMajor: (profile as any).intendedMajor || "",
+            yearsExperience: (profile as any).yearsExperience || "",
+            currentField: (profile as any).currentField || "",
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (data?.result) {
+        localStorage.setItem("pathwise-ai-roadmap", JSON.stringify(data.result));
+        setStageName(data.result.stageName);
+        setAiSummary(data.result.summary || "");
+        setMonthlyPlan(aiRoadmapToYearPlans(data.result));
+        setIsAIGenerated(true);
+        toast({ title: "Roadmap regenerated!", description: "Your AI-powered roadmap has been refreshed." });
+      }
+    } catch (err: any) {
+      console.error("Regenerate error:", err);
+      toast({ title: "Error", description: "Failed to regenerate roadmap. Please try again.", variant: "destructive" });
+    } finally {
+      setRegenerating(false);
+    }
+  };
 
   const toggleAction = (id: string) => {
     setCompletedIds(prev => {
@@ -197,17 +293,17 @@ export default function RoadmapPage() {
   };
 
   const handleSave = () => {
-    const data = { profile, roadmap, monthlyPlan, completedIds: [...completedIds], savedAt: new Date().toISOString() };
+    const data = { profile, monthlyPlan, completedIds: [...completedIds], savedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "pathwise-planner.json";
+    a.download = "pathwise-roadmap.json";
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  if (!profile || !roadmap) return null;
+  if (!profile) return null;
 
   const allActions = monthlyPlan.flatMap(y => y.months.flatMap(m => m.actions));
   const totalDone = allActions.filter(a => completedIds.has(a.id)).length;
@@ -220,13 +316,24 @@ export default function RoadmapPage() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight mb-1">Your Roadmap</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight">Your Roadmap</h1>
+              {isAIGenerated && (
+                <Badge variant="secondary" className="text-[10px] gap-1">
+                  <Sparkles className="w-3 h-3" /> AI-Generated
+                </Badge>
+              )}
+            </div>
             <p className="text-muted-foreground text-sm">
               Built for <span className="font-semibold text-foreground">{stageName}</span> · {totalDone}/{allActions.length} actions completed
               {totalUrgent > 0 && <span className="text-destructive font-semibold"> · {totalUrgent} urgent</span>}
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={regenerateRoadmap} disabled={regenerating}>
+              {regenerating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              {regenerating ? "Regenerating..." : "Regenerate"}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/profile-setup")}>
               <RotateCcw className="w-4 h-4 mr-2" />Update Profile
             </Button>
@@ -235,6 +342,20 @@ export default function RoadmapPage() {
             </Button>
           </div>
         </motion.div>
+
+        {/* AI Summary */}
+        {aiSummary && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+            <Card className="border-primary/20 bg-primary/5">
+              <CardContent className="p-4">
+                <p className="text-sm text-foreground flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  {aiSummary}
+                </p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Overall Progress */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -257,33 +378,49 @@ export default function RoadmapPage() {
         </motion.div>
 
         {/* Monthly Planner */}
-        <div className="space-y-4">
-          {monthlyPlan.map((yp, i) => (
-            <motion.div key={yp.year} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
-              <YearBlock yearPlan={yp} completedIds={completedIds} onToggle={toggleAction} />
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: "Actions", value: allActions.length, icon: BookOpen },
-              { label: "Completed", value: totalDone, icon: CheckCircle2 },
-              { label: "Urgent", value: totalUrgent, icon: AlertTriangle },
-              { label: "Progress", value: `${totalProgress}%`, icon: TrendingUp },
-            ].map(stat => (
-              <Card key={stat.label} className="premium-card">
-                <CardContent className="p-4 text-center">
-                  <stat.icon className="w-4 h-4 text-primary mx-auto mb-1" />
-                  <p className="text-xl font-display font-bold text-foreground">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</p>
-                </CardContent>
-              </Card>
+        {monthlyPlan.length === 0 && !regenerating ? (
+          <Card className="premium-card">
+            <CardContent className="p-8 text-center">
+              <Sparkles className="w-8 h-8 text-primary mx-auto mb-3" />
+              <h3 className="font-display font-bold text-foreground mb-2">No roadmap yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">Click "Regenerate" to have AI build your personalized roadmap, or update your profile first.</p>
+              <Button onClick={regenerateRoadmap} disabled={regenerating}>
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate My Roadmap
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {monthlyPlan.map((yp, i) => (
+              <motion.div key={yp.year} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
+                <YearBlock yearPlan={yp} completedIds={completedIds} onToggle={toggleAction} />
+              </motion.div>
             ))}
           </div>
-        </motion.div>
+        )}
+
+        {/* Quick Stats */}
+        {allActions.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Actions", value: allActions.length, icon: BookOpen },
+                { label: "Completed", value: totalDone, icon: CheckCircle2 },
+                { label: "Urgent", value: totalUrgent, icon: AlertTriangle },
+                { label: "Progress", value: `${totalProgress}%`, icon: TrendingUp },
+              ].map(stat => (
+                <Card key={stat.label} className="premium-card">
+                  <CardContent className="p-4 text-center">
+                    <stat.icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                    <p className="text-xl font-display font-bold text-foreground">{stat.value}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
