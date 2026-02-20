@@ -9,7 +9,9 @@ import {
   Settings,
   Target,
   Compass,
+  Globe,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -22,23 +24,26 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Action Center", url: "/actions", icon: Target },
-  { title: "My Roadmap", url: "/roadmap", icon: Map },
-  { title: "Explore", url: "/explore", icon: Compass },
-  { title: "Schools", url: "/schools", icon: GraduationCap },
-  { title: "Careers", url: "/careers", icon: Briefcase },
-  { title: "Companies", url: "/companies", icon: Building2 },
-  { title: "Networking", url: "/networking", icon: Users },
-];
-
-const toolItems = [
-  { title: "AI Advisor", url: "/chat", icon: Bot },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
-
 export function AppSidebar() {
+  const { t } = useTranslation();
+
+  const mainItems = [
+    { title: t("nav.dashboard"), url: "/dashboard", icon: LayoutDashboard },
+    { title: t("nav.actionCenter"), url: "/actions", icon: Target },
+    { title: t("nav.roadmap"), url: "/roadmap", icon: Map },
+    { title: t("nav.explore"), url: "/explore", icon: Compass },
+    { title: t("nav.schools"), url: "/schools", icon: GraduationCap },
+    { title: t("nav.careers"), url: "/careers", icon: Briefcase },
+    { title: t("nav.companies"), url: "/companies", icon: Building2 },
+    { title: t("nav.networking"), url: "/networking", icon: Users },
+  ];
+
+  const toolItems = [
+    { title: t("nav.aiAdvisor"), url: "/chat", icon: Bot },
+    { title: t("nav.language"), url: "/settings#language", icon: Globe },
+    { title: t("nav.settings"), url: "/settings", icon: Settings },
+  ];
+
   return (
     <Sidebar className="border-r border-sidebar-border">
       <SidebarContent className="pt-4">
@@ -49,11 +54,11 @@ export function AppSidebar() {
         </div>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.main")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
@@ -72,11 +77,11 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.tools")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {toolItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+                <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
