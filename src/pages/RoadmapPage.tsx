@@ -4,13 +4,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown, ChevronRight, Download, RotateCcw,
   CheckCircle2, Circle, Calendar, BookOpen, TrendingUp,
-  AlertTriangle, Zap, Sparkles, Loader2, ChevronRight as ChevronRightIcon,
+  Sparkles, Loader2, Clock,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { UserProfile } from "@/lib/types";
 import {
   generateMonthlyPlan, YearPlan, categoryLabels, stageOptions, phaseColors,
@@ -96,11 +100,17 @@ const categoryColorsBg: Record<string, string> = {
   skills: "bg-indigo-500",
 };
 
-// Check deadline proximity
-function getDeadlineBadge(action: { urgent?: boolean }, completedIds: Set<string>, actionId: string) {
-  if (completedIds.has(actionId)) return null;
-  if (action.urgent) return <Badge variant="destructive" className="text-[9px] gap-0.5 px-1.5"><AlertTriangle className="w-2.5 h-2.5" /> Overdue</Badge>;
-  return null;
+// Typical completion timing hint based on category
+function getTypicalTiming(category: string): string {
+  const timings: Record<string, string> = {
+    academics: "Usually done in weeks 1–2",
+    testing: "Usually done in weeks 2–3",
+    applications: "Usually done in weeks 3–4",
+    financial: "Usually done in weeks 1–2",
+    career: "Usually done in weeks 2–3",
+    skills: "Ongoing throughout the month",
+  };
+  return timings[category] || "Flexible timing";
 }
 
 // Current month name
@@ -129,11 +139,13 @@ function MobileTruncatedText({ text, className = "" }: { text: string; className
 }
 
 // ─── Month Block ─────────────────────────────────────────
-function MonthBlock({ month, actions, onToggle, completedIds }: {
+function MonthBlock({ month, actions, onToggle, completedIds, deadlines, onSetDeadline }: {
   month: string;
   actions: { id: string; title: string; description: string; category: string; urgent?: boolean }[];
   onToggle: (id: string) => void;
   completedIds: Set<string>;
+  deadlines: Record<string, string>;
+  onSetDeadline: (id: string, date: Date | undefined) => void;
 }) {
   const done = actions.filter(a => completedIds.has(a.id)).length;
   const isCurrentMonth = month.toLowerCase().includes(currentMonthName.toLowerCase());
@@ -153,41 +165,65 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
           const isDone = completedIds.has(action.id);
           const catColor = categoryColors[action.category] || "border-l-border";
           return (
-            <motion.button
+            <motion.div
               key={action.id}
-              onClick={() => onToggle(action.id)}
-              whileTap={{ scale: 0.98 }}
               className={`w-full text-left flex items-start gap-3 p-3 rounded-xl border border-l-4 transition-all min-h-[44px] ${catColor} ${
                 isDone
                   ? "border-accent/20 bg-accent/5 opacity-70"
-                  : action.urgent
-                  ? "border-destructive/40 bg-destructive/5 hover:border-destructive/60 hover:shadow-sm"
                   : "border-border/40 bg-card hover:border-border/60 hover:shadow-sm"
               }`}
             >
-              {isDone ? (
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
-                  <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                </motion.div>
-              ) : (
-                <Circle className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
-              )}
+              <button onClick={() => onToggle(action.id)} className="shrink-0 mt-0.5">
+                {isDone ? (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+                    <CheckCircle2 className="w-4 h-4 text-accent" />
+                  </motion.div>
+                ) : (
+                  <Circle className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {action.title}
-                  </p>
-                  {getDeadlineBadge(action, completedIds, action.id)}
-                  {action.urgent && !isDone && !getDeadlineBadge(action, completedIds, action.id) && (
-                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-destructive">
-                      <AlertTriangle className="w-3 h-3" /> Urgent
-                    </span>
+                <p className={`text-sm font-medium ${isDone ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                  {action.title}
+                </p>
+                <MobileTruncatedText text={action.description} className="text-xs text-muted-foreground mt-0.5" />
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    {getTypicalTiming(action.category)}
+                  </span>
+                  {deadlines[action.id] && !isDone && (
+                    <Badge variant="outline" className="text-[10px] gap-1">
+                      <Calendar className="w-2.5 h-2.5" />
+                      Due {format(new Date(deadlines[action.id]), "MMM d")}
+                    </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{action.description}</p>
               </div>
-              <span className="text-[10px] text-muted-foreground shrink-0">{categoryLabels[action.category]?.split(" ")[0] || action.category}</span>
-            </motion.button>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span className="text-[10px] text-muted-foreground">{categoryLabels[action.category]?.split(" ")[0] || action.category}</span>
+                {!isDone && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[10px] text-primary hover:underline font-medium"
+                      >
+                        {deadlines[action.id] ? "Change" : "Set deadline"}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <CalendarPicker
+                        mode="single"
+                        selected={deadlines[action.id] ? new Date(deadlines[action.id]) : undefined}
+                        onSelect={(date) => onSetDeadline(action.id, date)}
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            </motion.div>
           );
         })}
       </div>
@@ -196,16 +232,17 @@ function MonthBlock({ month, actions, onToggle, completedIds }: {
 }
 
 // ─── Year Block ──────────────────────────────────────────
-function YearBlock({ yearPlan, completedIds, onToggle }: {
+function YearBlock({ yearPlan, completedIds, onToggle, deadlines, onSetDeadline }: {
   yearPlan: YearPlan;
   completedIds: Set<string>;
   onToggle: (id: string) => void;
+  deadlines: Record<string, string>;
+  onSetDeadline: (id: string, date: Date | undefined) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const allActions = yearPlan.months.flatMap(m => m.actions);
   const done = allActions.filter(a => completedIds.has(a.id)).length;
   const progress = allActions.length > 0 ? Math.round((done / allActions.length) * 100) : 0;
-  const urgentCount = allActions.filter(a => a.urgent && !completedIds.has(a.id)).length;
 
   return (
     <Card className="premium-card overflow-hidden">
@@ -220,11 +257,6 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
             {yearPlan.phase && (
               <Badge variant="outline" className={`text-[10px] ${phaseColors[yearPlan.phase] || ""}`}>
                 {yearPlan.phase}
-              </Badge>
-            )}
-            {urgentCount > 0 && (
-              <Badge variant="destructive" className="text-[10px] gap-0.5">
-                <Zap className="w-3 h-3" /> {urgentCount} urgent
               </Badge>
             )}
           </div>
@@ -243,7 +275,7 @@ function YearBlock({ yearPlan, completedIds, onToggle }: {
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="px-5 pb-5">
               {yearPlan.months.map((mp) => (
-                <MonthBlock key={mp.month} month={mp.month} actions={mp.actions} completedIds={completedIds} onToggle={onToggle} />
+                <MonthBlock key={mp.month} month={mp.month} actions={mp.actions} completedIds={completedIds} onToggle={onToggle} deadlines={deadlines} onSetDeadline={onSetDeadline} />
               ))}
             </div>
           </motion.div>
@@ -263,6 +295,25 @@ export default function RoadmapPage() {
   const [isAIGenerated, setIsAIGenerated] = useState(false);
   const [aiSummary, setAiSummary] = useState("");
   const [regenerating, setRegenerating] = useState(false);
+  const [deadlines, setDeadlines] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem("pathwise-planner-deadlines");
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  const handleSetDeadline = (actionId: string, date: Date | undefined) => {
+    setDeadlines(prev => {
+      const next = { ...prev };
+      if (date) {
+        next[actionId] = date.toISOString();
+      } else {
+        delete next[actionId];
+      }
+      localStorage.setItem("pathwise-planner-deadlines", JSON.stringify(next));
+      return next;
+    });
+  };
 
   useEffect(() => {
     const p = getProfile();
@@ -369,7 +420,7 @@ export default function RoadmapPage() {
   const allActions = monthlyPlan.flatMap(y => y.months.flatMap(m => m.actions));
   const totalDone = allActions.filter(a => completedIds.has(a.id)).length;
   const totalProgress = allActions.length > 0 ? Math.round((totalDone / allActions.length) * 100) : 0;
-  const totalUrgent = allActions.filter(a => a.urgent && !completedIds.has(a.id)).length;
+  const totalWithDeadlines = Object.keys(deadlines).filter(id => allActions.some(a => a.id === id)).length;
 
   // Category legend
   const usedCategories = [...new Set(allActions.map(a => a.category))];
@@ -391,7 +442,6 @@ export default function RoadmapPage() {
               </div>
               <p className="text-muted-foreground text-xs sm:text-sm">
                 Built for <span className="font-semibold text-foreground">{stageName}</span> · {totalDone}/{allActions.length} done
-                {totalUrgent > 0 && <span className="text-destructive font-semibold"> · {totalUrgent} urgent</span>}
               </p>
             </div>
           </div>
@@ -474,7 +524,7 @@ export default function RoadmapPage() {
           <div className="space-y-4">
             {monthlyPlan.map((yp, i) => (
               <motion.div key={yp.year} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.1 }}>
-                <YearBlock yearPlan={yp} completedIds={completedIds} onToggle={toggleAction} />
+                <YearBlock yearPlan={yp} completedIds={completedIds} onToggle={toggleAction} deadlines={deadlines} onSetDeadline={handleSetDeadline} />
               </motion.div>
             ))}
           </div>
@@ -487,7 +537,7 @@ export default function RoadmapPage() {
               {[
                 { label: "Actions", value: allActions.length, icon: BookOpen },
                 { label: "Completed", value: totalDone, icon: CheckCircle2 },
-                { label: "Urgent", value: totalUrgent, icon: AlertTriangle },
+                { label: "Deadlines Set", value: totalWithDeadlines, icon: Calendar },
                 { label: "Progress", value: `${totalProgress}%`, icon: TrendingUp },
               ].map(stat => (
                 <div key={stat.label} className="stat-card">
