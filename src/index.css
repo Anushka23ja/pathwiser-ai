@@ -34,16 +34,19 @@
     --input: 220 16% 88%;
     --ring: 234 62% 45%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* Custom tokens */
-    --gradient-hero: linear-gradient(135deg, hsl(234 62% 45%), hsl(234 62% 30%));
-    --gradient-accent: linear-gradient(135deg, hsl(168 45% 45%), hsl(168 45% 35%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 20% 97%));
-    --gradient-cta: linear-gradient(135deg, hsl(234 62% 45%), hsl(262 50% 50%));
-    --shadow-card: 0 4px 24px -4px hsl(234 62% 45% / 0.08);
-    --shadow-elevated: 0 12px 40px -8px hsl(234 62% 45% / 0.15);
-    --shadow-glow: 0 0 40px -8px hsl(168 45% 45% / 0.3);
+    /* Premium tokens */
+    --gradient-hero: linear-gradient(135deg, hsl(234 62% 45%), hsl(258 55% 42%));
+    --gradient-accent: linear-gradient(135deg, hsl(168 45% 45%), hsl(168 50% 38%));
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 100%), hsl(220 25% 97%));
+    --gradient-cta: linear-gradient(135deg, hsl(234 62% 48%), hsl(262 55% 52%));
+    --gradient-surface: linear-gradient(180deg, hsl(220 20% 97%) 0%, hsl(220 25% 95%) 100%);
+    --gradient-focus: linear-gradient(135deg, hsl(40 95% 55%) 0%, hsl(28 90% 50%) 100%);
+    --shadow-card: 0 1px 3px hsl(230 25% 12% / 0.04), 0 4px 20px -4px hsl(234 62% 45% / 0.06);
+    --shadow-elevated: 0 4px 12px hsl(230 25% 12% / 0.05), 0 16px 48px -8px hsl(234 62% 45% / 0.12);
+    --shadow-glow: 0 0 40px -8px hsl(168 45% 45% / 0.25);
+    --shadow-focus: 0 4px 24px -4px hsl(40 95% 55% / 0.3);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -114,6 +117,14 @@
     @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-[var(--shadow-card)];
   }
 
+  .premium-card {
+    @apply bg-card border border-border/40 shadow-[var(--shadow-card)] rounded-2xl;
+  }
+
+  .premium-card-hover {
+    @apply premium-card transition-all duration-300 hover:shadow-[var(--shadow-elevated)] hover:border-border/60;
+  }
+
   .gradient-hero {
     background: var(--gradient-hero);
   }
@@ -124,6 +135,14 @@
 
   .gradient-accent {
     background: var(--gradient-accent);
+  }
+
+  .gradient-surface {
+    background: var(--gradient-surface);
+  }
+
+  .gradient-focus {
+    background: var(--gradient-focus);
   }
 
   .shadow-elevated {
@@ -137,5 +156,9 @@
   .text-gradient {
     @apply bg-clip-text text-transparent;
     background-image: var(--gradient-cta);
+  }
+
+  .section-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground;
   }
 }
