@@ -84,31 +84,181 @@ function getStageOptionsForLevel(level: string): StageOption[] {
   }
 }
 
-const whyOptions = [
-  "I don't know what career to pick",
-  "I want to switch my major or career",
-  "I'm exploring graduate school options",
-  "I want to advance in my current field",
-  "I need help planning my next steps",
-  "I want to compare different career paths",
-  "I'm considering going back to school",
-  "I want to find higher-paying opportunities",
-];
+function getWhyOptions(stage: string): string[] {
+  // High school stages
+  if (["9th", "10th"].includes(stage)) return [
+    "I don't know what career to pick",
+    "I want to explore different college options",
+    "I need help building my extracurricular profile",
+    "I want to prepare for standardized tests",
+    "I want to understand what majors fit me",
+    "I'm exploring trade school vs. college",
+    "I want to start preparing early for scholarships",
+  ];
+  if (["11th", "12th"].includes(stage)) return [
+    "I need help with college applications and essays",
+    "I want to compare colleges and programs",
+    "I need to prepare for SAT/ACT",
+    "I'm looking for scholarships and financial aid",
+    "I want to explore gap year options",
+    "I don't know what major to choose",
+    "I want to build a strong application profile",
+    "I'm considering Running Start or dual enrollment",
+  ];
+  // Running Start
+  if (["rs-1", "rs-2"].includes(stage)) return [
+    "I want to maximize my transfer credits",
+    "I need help choosing a 4-year university",
+    "I want to balance HS requirements and college courses",
+    "I'm planning my associate degree completion",
+    "I want to explore career options while earning credits",
+    "I need help with transfer applications",
+    "I want to find scholarships for transfer students",
+  ];
+  // College stages
+  if (stage === "col-fresh") return [
+    "I'm undecided on my major",
+    "I want to explore different career paths",
+    "I want to get involved on campus",
+    "I need help adjusting to college academics",
+    "I want to find research or internship opportunities",
+    "I'm considering switching schools",
+    "I need help managing finances and budgeting",
+  ];
+  if (stage === "col-soph") return [
+    "I need to declare my major",
+    "I want to land my first internship",
+    "I'm thinking about switching majors",
+    "I want to build a professional network",
+    "I'm considering study abroad",
+    "I need help with career fair preparation",
+    "I want to start building my portfolio",
+  ];
+  if (stage === "col-junior") return [
+    "I want to secure a competitive internship",
+    "I'm deciding between grad school and working",
+    "I need to prepare for the GRE/GMAT/LSAT",
+    "I want to build leadership experience",
+    "I need help with graduate school applications",
+    "I want to network with industry professionals",
+    "I'm planning my senior year strategically",
+  ];
+  if (stage === "col-senior") return [
+    "I'm applying to full-time jobs",
+    "I'm applying to graduate programs",
+    "I need help with interview preparation",
+    "I want to negotiate my first salary",
+    "I'm finishing my thesis or capstone",
+    "I need to compare job offers",
+    "I'm planning my post-graduation transition",
+  ];
+  // Master's applicant
+  if (stage === "masters") return [
+    "I want to find the right graduate program",
+    "I need help with my statement of purpose",
+    "I'm preparing for entrance exams (GRE/GMAT/LSAT)",
+    "I want to secure research or teaching assistantships",
+    "I need to find fellowship and funding opportunities",
+    "I want to strengthen my application profile",
+    "I'm comparing programs by career outcomes",
+    "I want to transition into a new field through grad school",
+  ];
+  // Gap year
+  if (stage === "gap-year") return [
+    "I want to use my gap year productively",
+    "I'm exploring career options before committing",
+    "I want to gain work or volunteer experience",
+    "I need to save money for school",
+    "I'm applying to college during my gap year",
+    "I want to travel and learn new skills",
+    "I need a plan so I don't lose momentum",
+  ];
+  // Early professional
+  if (stage === "early-pro") return [
+    "I want to advance in my current role",
+    "I'm considering a career switch",
+    "I want to earn certifications or upskill",
+    "I'm thinking about going back to school",
+    "I want to move into management or leadership",
+    "I'm exploring freelancing or entrepreneurship",
+    "I want to increase my earning potential",
+    "I need better work-life balance",
+  ];
+  // Default
+  return [
+    "I don't know what career to pick",
+    "I want to switch my major or career",
+    "I'm exploring graduate school options",
+    "I want to advance in my current field",
+    "I need help planning my next steps",
+    "I want to compare different career paths",
+    "I want to find higher-paying opportunities",
+  ];
+}
 
-const careerInterestOptions = [
-  "Software & Tech",
-  "Healthcare & Medicine",
-  "Business & Finance",
-  "Engineering",
-  "Education & Teaching",
-  "Creative & Design",
-  "Law & Policy",
-  "Science & Research",
-  "Trades & Skilled Labor",
-  "Marketing & Communications",
-  "Social Work & Counseling",
-  "Entrepreneurship",
-];
+function getCareerOptions(stage: string): string[] {
+  // Master's / grad-focused
+  if (stage === "masters") return [
+    "Academic Research",
+    "Data Science & AI",
+    "Healthcare & Clinical Research",
+    "Business & Consulting",
+    "Engineering & R&D",
+    "Law & Policy",
+    "Education & Higher Ed Administration",
+    "Biotech & Pharmaceuticals",
+    "Finance & Quantitative Analysis",
+    "Public Health & Epidemiology",
+    "Psychology & Counseling",
+    "Environmental Science & Sustainability",
+  ];
+  // Early professional
+  if (stage === "early-pro") return [
+    "Software & Tech",
+    "Product Management",
+    "Data & Analytics",
+    "Healthcare & Medicine",
+    "Business & Consulting",
+    "Marketing & Growth",
+    "Finance & Investment",
+    "Engineering & Manufacturing",
+    "Design & UX",
+    "Sales & Business Development",
+    "Project & Operations Management",
+    "Entrepreneurship & Startups",
+  ];
+  // College juniors/seniors — career-focused
+  if (["col-junior", "col-senior"].includes(stage)) return [
+    "Software & Tech",
+    "Healthcare & Medicine",
+    "Business & Finance",
+    "Engineering",
+    "Data Science & Analytics",
+    "Creative & Design",
+    "Law & Policy",
+    "Consulting & Strategy",
+    "Science & Research",
+    "Marketing & Communications",
+    "Entrepreneurship",
+    "Nonprofit & Social Impact",
+  ];
+  // Default / HS / early college — broader exploration
+  return [
+    "Software & Tech",
+    "Healthcare & Medicine",
+    "Business & Finance",
+    "Engineering",
+    "Education & Teaching",
+    "Creative & Design",
+    "Law & Policy",
+    "Science & Research",
+    "Trades & Skilled Labor",
+    "Marketing & Communications",
+    "Social Work & Counseling",
+    "Entrepreneurship",
+  ];
+}
+
 
 function ToggleChip({ label, selected, onClick }: { label: string; selected: boolean; onClick: () => void }) {
   return (
@@ -382,7 +532,7 @@ export default function ProfileSetupPage() {
                         key={stage.id}
                         stage={stage}
                         selected={profile.stage === stage.id}
-                        onClick={() => setProfile({ ...profile, stage: stage.id })}
+                        onClick={() => setProfile({ ...profile, stage: stage.id, whyUsing: [], careerInterests: [] })}
                       />
                     ))}
                   </div>
@@ -482,7 +632,7 @@ export default function ProfileSetupPage() {
                   </div>
                   <p className="text-muted-foreground mb-8">Select all that apply — this helps us give better recommendations.</p>
                   <div className="flex flex-wrap gap-3">
-                    {whyOptions.map((opt) => (
+                    {getWhyOptions(profile.stage).map((opt) => (
                       <ToggleChip
                         key={opt}
                         label={opt}
@@ -503,7 +653,7 @@ export default function ProfileSetupPage() {
                   </div>
                   <p className="text-muted-foreground mb-8">Pick the fields you're curious about — we'll build your roadmap around these.</p>
                   <div className="flex flex-wrap gap-3">
-                    {careerInterestOptions.map((opt) => (
+                    {getCareerOptions(profile.stage).map((opt) => (
                       <ToggleChip
                         key={opt}
                         label={opt}
