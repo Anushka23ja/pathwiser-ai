@@ -13,6 +13,7 @@ import CareersPage from "./pages/CareersPage";
 import CompaniesPage from "./pages/CompaniesPage";
 import NetworkingPage from "./pages/NetworkingPage";
 import ChatPage from "./pages/ChatPage";
+import VoiceAdvisorPage from "./pages/VoiceAdvisorPage";
 import SettingsPage from "./pages/SettingsPage";
 import ActionCenterPage from "./pages/ActionCenterPage";
 import ExplorePage from "./pages/ExplorePage";
@@ -49,6 +50,7 @@ const AppRoutes = () => (
     <Route path="/companies" element={<ProtectedRoute><CompaniesPage /></ProtectedRoute>} />
     <Route path="/networking" element={<ProtectedRoute><NetworkingPage /></ProtectedRoute>} />
     <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+    <Route path="/voice" element={<ProtectedRoute><VoiceAdvisorPage /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>

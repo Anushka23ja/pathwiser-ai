@@ -12,6 +12,7 @@ const en = {
     "nav.companies": "Companies",
     "nav.networking": "Networking",
     "nav.aiAdvisor": "AI Advisor",
+    "nav.voiceAdvisor": "Voice Advisor",
     "nav.settings": "Settings",
     "nav.language": "Language",
 
