@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Building2, Briefcase, Target, Lightbulb, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, GraduationCap, Building2, Briefcase, Target, Lightbulb, Sparkles, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { stageOptions, StageOption } from "@/lib/monthlyPlannerData";
 
 const steps = [
   { id: "level", title: "About You" },
+  { id: "stage", title: "Your Stage" },
   { id: "details", title: "Your Situation" },
   { id: "why", title: "Your Why" },
   { id: "careers", title: "Career Goals" },
@@ -67,6 +69,20 @@ const levelDetailOptions: Record<string, { label: string; description: string }[
     { label: "Work-Life Balance Optimization", description: "I want a career that better fits my lifestyle goals" },
   ],
 };
+
+// Stage options grouped by education level
+function getStageOptionsForLevel(level: string): StageOption[] {
+  switch (level) {
+    case "High School":
+      return stageOptions.filter(s => s.group === "High School" || s.id === "rs-1" || s.id === "rs-2" || s.id === "gap-year");
+    case "College":
+      return stageOptions.filter(s => s.group === "College" || s.id === "masters" || s.id === "gap-year");
+    case "Professional":
+      return stageOptions.filter(s => s.id === "early-pro" || s.id === "masters" || s.id === "gap-year");
+    default:
+      return [];
+  }
+}
 
 const whyOptions = [
   "I don't know what career to pick",
@@ -135,6 +151,30 @@ function DetailCard({ label, description, selected, onClick }: { label: string; 
   );
 }
 
+function StageCard({ stage, selected, onClick }: { stage: StageOption; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-200 ${
+        selected
+          ? "border-primary bg-primary/5 shadow-elevated"
+          : "border-border bg-card hover:border-primary/30 hover:bg-muted/50"
+      }`}
+    >
+      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+        selected ? "border-primary bg-primary" : "border-border"
+      }`}>
+        {selected && <CheckCircle2 className="w-3 h-3 text-primary-foreground" />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <h4 className="font-medium text-foreground text-sm">{stage.label}</h4>
+        <p className="text-muted-foreground text-xs mt-0.5">{stage.description}</p>
+      </div>
+    </button>
+  );
+}
+
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -142,10 +182,14 @@ export default function ProfileSetupPage() {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState({
     educationLevel: "",
+    stage: "" as string,
     levelDetails: [] as string[],
     whyUsing: [] as string[],
     careerInterests: [] as string[],
     schoolName: "",
+    intendedMajor: "",
+    yearsExperience: "",
+    currentField: "",
   });
 
   useEffect(() => {
@@ -158,9 +202,10 @@ export default function ProfileSetupPage() {
   const canProceed = () => {
     switch (step) {
       case 0: return profile.educationLevel !== "";
-      case 1: return profile.levelDetails.length > 0;
-      case 2: return profile.whyUsing.length > 0;
-      case 3: return profile.careerInterests.length > 0;
+      case 1: return profile.stage !== "";
+      case 2: return profile.levelDetails.length > 0;
+      case 3: return profile.whyUsing.length > 0;
+      case 4: return profile.careerInterests.length > 0;
       default: return false;
     }
   };
@@ -173,6 +218,7 @@ export default function ProfileSetupPage() {
         .from("profiles")
         .update({
           education_level: profile.educationLevel,
+          grade_year: profile.stage,
           school_name: profile.schoolName || null,
           interests: profile.whyUsing,
           career_interests: profile.careerInterests,
@@ -183,6 +229,7 @@ export default function ProfileSetupPage() {
 
       if (error) throw error;
 
+      // Save to localStorage for roadmap and other pages
       localStorage.setItem("pathwise-profile", JSON.stringify({
         educationLevel: profile.educationLevel,
         interests: profile.careerInterests,
@@ -192,9 +239,15 @@ export default function ProfileSetupPage() {
         budgetConcern: "",
         location: "",
         longTermGoals: profile.whyUsing,
+        intendedMajor: profile.intendedMajor,
+        yearsExperience: profile.yearsExperience,
+        currentField: profile.currentField,
       }));
 
-      toast({ title: "You're all set!", description: "Generating your personalized dashboard..." });
+      // Save stage for roadmap auto-generation
+      localStorage.setItem("pathwise-selected-stage", profile.stage);
+
+      toast({ title: "You're all set!", description: "Generating your personalized roadmap..." });
       navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -205,6 +258,7 @@ export default function ProfileSetupPage() {
 
   const progress = ((step + 1) / steps.length) * 100;
   const detailOptions = levelDetailOptions[profile.educationLevel] || [];
+  const availableStages = getStageOptionsForLevel(profile.educationLevel);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -249,7 +303,7 @@ export default function ProfileSetupPage() {
                       <button
                         key={card.value}
                         type="button"
-                        onClick={() => setProfile({ ...profile, educationLevel: card.value, levelDetails: [] })}
+                        onClick={() => setProfile({ ...profile, educationLevel: card.value, levelDetails: [], stage: "" })}
                         className={`flex items-start gap-4 p-5 rounded-xl border text-left transition-all duration-200 ${
                           profile.educationLevel === card.value
                             ? "border-primary bg-primary/5 shadow-elevated"
@@ -309,8 +363,88 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 2: Level-specific details */}
+              {/* Step 2: Specific Stage */}
               {step === 1 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <MapPin className="w-7 h-7 text-primary" />
+                    <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
+                      Where exactly are you right now?
+                    </h2>
+                  </div>
+                  <p className="text-muted-foreground mb-8">
+                    This determines your personalized roadmap — we'll build time-sensitive milestones starting from this point.
+                  </p>
+
+                  <div className="grid gap-3">
+                    {availableStages.map((stage) => (
+                      <StageCard
+                        key={stage.id}
+                        stage={stage}
+                        selected={profile.stage === stage.id}
+                        onClick={() => setProfile({ ...profile, stage: stage.id })}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Conditional follow-up fields */}
+                  {profile.stage && profile.educationLevel === "College" && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-6">
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Intended or declared major (optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Computer Science, Biology, Undeclared..."
+                        value={profile.intendedMajor}
+                        onChange={(e) => setProfile({ ...profile, intendedMajor: e.target.value })}
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </motion.div>
+                  )}
+
+                  {profile.stage && profile.educationLevel === "Professional" && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-6 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Years of experience
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          {["< 1 year", "1–3 years", "3–5 years", "5–10 years", "10+ years"].map((opt) => (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setProfile({ ...profile, yearsExperience: opt })}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                                profile.yearsExperience === opt
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-card text-foreground border-border hover:border-primary/30"
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          Current or target field (optional)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Software Engineering, Marketing, Healthcare..."
+                          value={profile.currentField}
+                          onChange={(e) => setProfile({ ...profile, currentField: e.target.value })}
+                          className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Level-specific details */}
+              {step === 2 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Sparkles className="w-7 h-7 text-primary" />
@@ -339,8 +473,8 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 3: Why are you here */}
-              {step === 2 && (
+              {/* Step 4: Why are you here */}
+              {step === 3 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Lightbulb className="w-7 h-7 text-primary" />
@@ -360,8 +494,8 @@ export default function ProfileSetupPage() {
                 </div>
               )}
 
-              {/* Step 4: Career interests */}
-              {step === 3 && (
+              {/* Step 5: Career interests */}
+              {step === 4 && (
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <Target className="w-7 h-7 text-primary" />
