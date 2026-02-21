@@ -58,10 +58,38 @@ export default function DashboardPage() {
   const activeGoals = goals.filter(g => g.status === "active");
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter(t => t.status === "done").length;
-  const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+  // Also pull roadmap planner data from localStorage for richer stats
+  const roadmapCompleted = (() => {
+    try {
+      const saved = localStorage.getItem("pathwise-planner-completed");
+      return saved ? (JSON.parse(saved) as string[]).length : 0;
+    } catch { return 0; }
+  })();
+  const roadmapDeadlines = (() => {
+    try {
+      const saved = localStorage.getItem("pathwise-planner-deadlines");
+      if (!saved) return null;
+      const deadlines = JSON.parse(saved) as Record<string, string>;
+      const upcoming = Object.values(deadlines)
+        .map(d => new Date(d))
+        .filter(d => d > new Date())
+        .sort((a, b) => a.getTime() - b.getTime());
+      return upcoming.length > 0 ? upcoming[0] : null;
+    } catch { return null; }
+  })();
+
+  const combinedDone = doneTasks + roadmapCompleted;
+  const overallProgress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : (roadmapCompleted > 0 ? Math.min(roadmapCompleted * 5, 100) : 0);
   const upcomingTasks = tasks.filter(t => t.status !== "done" && t.status !== "skipped").slice(0, 3);
   const interests = (profile.careerInterests || profile.interests).slice(0, 3);
   const overdueTasks = tasks.filter(t => t.status !== "done" && t.due_date && new Date(t.due_date) < new Date());
+
+  // Next deadline: prefer DB task deadline, fallback to roadmap deadline
+  const nextTaskDeadline = tasks
+    .filter(t => t.status !== "done" && t.due_date && new Date(t.due_date) > new Date())
+    .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())[0]?.due_date;
+  const nextDeadlineDate = nextTaskDeadline ? new Date(nextTaskDeadline) : roadmapDeadlines;
 
   // Find nearest milestone for progress
   const currentMilestoneIdx = milestones.reduce((best, m, i) => overallProgress >= m.position ? i : best, 0);
@@ -105,9 +133,9 @@ export default function DashboardPage() {
 
   const statsRow = [
     { label: t("dashboard.activeGoals", { count: activeGoals.length }).replace(`${activeGoals.length} `, ""), value: activeGoals.length, icon: Target, accent: "text-primary" },
-    { label: "Tasks Done", value: doneTasks, icon: CheckCircle2, accent: "text-accent" },
+    { label: "Tasks Done", value: combinedDone, icon: CheckCircle2, accent: "text-accent" },
     { label: "Streak", value: "3d", icon: Flame, accent: "text-destructive" },
-    { label: "Next Deadline", value: upcomingTasks[0]?.due_date ? new Date(upcomingTasks[0].due_date).toLocaleDateString("en", { month: "short", day: "numeric" }) : "—", icon: Clock, accent: "text-primary" },
+    { label: "Next Deadline", value: nextDeadlineDate ? nextDeadlineDate.toLocaleDateString("en", { month: "short", day: "numeric" }) : "—", icon: Clock, accent: "text-primary" },
   ];
 
   const fade = {
