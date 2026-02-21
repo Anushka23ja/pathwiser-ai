@@ -363,6 +363,8 @@ export default function ProfileSetupPage() {
         // Will fall back to static roadmap on roadmap page
       }
 
+      // Signal to OnboardingTutorial that setup is complete
+      window.dispatchEvent(new Event("pathwise-onboarding-complete"));
       navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
