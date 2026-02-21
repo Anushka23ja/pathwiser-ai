@@ -63,13 +63,36 @@ export default function OnboardingTutorial() {
   const [visible, setVisible] = useState(false);
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
 
+  // Robust trigger: check on mount, on profile-setup completion event, and on visibility change
   useEffect(() => {
-    const done = localStorage.getItem(TUTORIAL_KEY);
-    if (!done) {
-      const timer = setTimeout(() => setVisible(true), 600);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    const shouldShow = () => {
+      const done = localStorage.getItem(TUTORIAL_KEY);
+      const hasProfile = localStorage.getItem("pathwise-profile");
+      // Show tutorial only if not completed AND user has gone through profile setup
+      return !done && !!hasProfile;
+    };
+
+    const tryShow = () => {
+      if (shouldShow() && !visible) {
+        // Small delay to let DOM elements (nav items) render
+        setTimeout(() => setVisible(true), 800);
+      }
+    };
+
+    // Check immediately (with delay for DOM)
+    tryShow();
+
+    // Listen for custom event dispatched after profile setup completes
+    const handler = () => tryShow();
+    window.addEventListener("pathwise-onboarding-complete", handler);
+    // Also re-check on focus/visibility in case of navigation timing
+    document.addEventListener("visibilitychange", handler);
+
+    return () => {
+      window.removeEventListener("pathwise-onboarding-complete", handler);
+      document.removeEventListener("visibilitychange", handler);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const measureTarget = useCallback((selector: string | null) => {
     if (!selector) {
