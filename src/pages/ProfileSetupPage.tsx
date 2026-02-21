@@ -94,21 +94,39 @@ const fallbackWhyByLevel: Record<string, string[]> = {
 
 const fallbackCareersByLevel: Record<string, string[]> = {
   "High School": [
-    "Software & Tech", "Healthcare", "Engineering", "Creative & Design",
-    "Business", "Trades & Skilled Labor", "Science & Research", "Education",
-    "Media & Film", "Law & Government", "Environmental Science", "Psychology",
+    "Engineering", "Healthcare", "Education", "Technology",
+    "Arts & Design", "Business", "Skilled Trades", "Science Research",
+    "Law", "Environmental Science", "Journalism", "Social Work",
+    "Psychology", "Architecture", "Music & Performing Arts", "Culinary Arts",
+    "Agriculture & Farming", "Aviation & Aerospace", "Sports & Fitness",
+    "Hospitality & Tourism", "Fashion & Textiles", "Automotive & Mechanics",
+    "Public Safety & Emergency", "Media & Film", "Real Estate",
+    "Veterinary & Animal Care", "Military & Defense", "Marine Biology",
+    "Pharmacy", "Graphic Design", "Photography",
   ],
   "College": [
     "Software Engineering", "Data Science", "Healthcare & Medicine", "Finance & Consulting",
     "Engineering", "UX/Product Design", "Research & Academia", "Marketing & Media",
     "Law", "Education", "Environmental Science", "Psychology & Counseling",
-    "Government & Policy", "Entrepreneurship",
+    "Government & Policy", "Entrepreneurship", "Cybersecurity",
+    "Biotech & Pharmaceuticals", "Supply Chain & Logistics", "Human Resources",
+    "Architecture & Urban Planning", "Journalism & Communications",
+    "Social Work & Nonprofits", "Performing Arts & Entertainment",
+    "Sports Management", "International Relations", "Public Health",
+    "Artificial Intelligence & ML", "Renewable Energy", "Criminal Justice",
+    "Linguistics & Translation", "Economics & Policy", "Veterinary Science",
   ],
   "Professional": [
     "Tech & Software", "Product Management", "Data & Analytics", "Healthcare Leadership",
     "Finance & Investing", "Consulting", "Entrepreneurship", "Creative Direction",
     "Education & Training", "Legal", "Government & Public Service", "Trades & Skilled Labor",
-    "Nonprofit & Social Impact", "Media & Communications",
+    "Nonprofit & Social Impact", "Media & Communications", "Cybersecurity",
+    "Real Estate & Property", "Supply Chain & Operations", "Human Resources & People Ops",
+    "Renewable Energy & Sustainability", "Biotech & Life Sciences",
+    "Executive Coaching & Mentoring", "Franchise & Small Business",
+    "Sales & Business Development", "Technical Writing & Documentation",
+    "Event Planning & Hospitality", "Research & Development", "Agriculture & Food Tech",
+    "Aviation & Transportation", "Insurance & Risk Management", "Public Relations",
   ],
 };
 
@@ -596,16 +614,21 @@ export default function ProfileSetupPage() {
                       <Sparkles className="w-3 h-3" /> Curated for your answers
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {careerOptions.map((opt) => (
-                      <ToggleChip
-                        key={opt}
-                        label={opt}
-                        selected={profile.careerInterests.includes(opt)}
-                        onClick={() => setProfile({ ...profile, careerInterests: toggleArrayItem(profile.careerInterests, opt) })}
-                      />
-                    ))}
+                  <div className="max-h-[45dvh] overflow-y-auto rounded-xl border border-border/50 p-3 -mx-1">
+                    <div className="flex flex-wrap gap-2">
+                      {careerOptions.map((opt) => (
+                        <ToggleChip
+                          key={opt}
+                          label={opt}
+                          selected={profile.careerInterests.includes(opt)}
+                          onClick={() => setProfile({ ...profile, careerInterests: toggleArrayItem(profile.careerInterests, opt) })}
+                        />
+                      ))}
+                    </div>
                   </div>
+                  {profile.careerInterests.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">{profile.careerInterests.length} selected</p>
+                  )}
                 </div>
               )}
             </motion.div>
